@@ -11,6 +11,7 @@ pub enum AppErrorType {
     InvalidToken,
     BlockingError,
     ServerError,
+    JWTTokenError,
 }
 
 #[derive(Debug)]
@@ -137,6 +138,16 @@ impl From<actix_web::error::BlockingError> for AppError {
             message: None,
             cause: Some(error.to_string()),
             error_type: AppErrorType::BlockingError,
+        }
+    }
+}
+
+impl From<jsonwebtoken::errors::Error> for AppError {
+    fn from(error: jsonwebtoken::errors::Error) -> AppError {
+        AppError {
+            message: Some(format!("{:?}", error.kind())),
+            cause: None,
+            error_type: AppErrorType::JWTTokenError,
         }
     }
 }
