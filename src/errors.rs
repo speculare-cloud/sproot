@@ -12,6 +12,7 @@ pub enum AppErrorType {
     BlockingError,
     ServerError,
     JWTTokenError,
+    UUIDError,
 }
 
 #[derive(Debug)]
@@ -75,7 +76,9 @@ pub struct AppErrorResponse {
 impl ResponseError for AppError {
     fn status_code(&self) -> StatusCode {
         match self.error_type {
-            AppErrorType::InvalidRequest => StatusCode::BAD_REQUEST,
+            AppErrorType::InvalidRequest
+            | AppErrorType::JWTTokenError
+            | AppErrorType::UUIDError => StatusCode::BAD_REQUEST,
             AppErrorType::InvalidToken => StatusCode::UNAUTHORIZED,
             AppErrorType::NotFound => StatusCode::NOT_FOUND,
             _ => StatusCode::INTERNAL_SERVER_ERROR,
@@ -148,6 +151,16 @@ impl From<jsonwebtoken::errors::Error> for AppError {
             message: Some(format!("{:?}", error.kind())),
             cause: None,
             error_type: AppErrorType::JWTTokenError,
+        }
+    }
+}
+
+impl From<uuid::Error> for AppError {
+    fn from(error: uuid::Error) -> AppError {
+        AppError {
+            message: Some(format!("{:?}", error)),
+            cause: None,
+            error_type: AppErrorType::UUIDError,
         }
     }
 }
