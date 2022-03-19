@@ -33,3 +33,28 @@ impl Customers {
         Ok(res.is_some())
     }
 }
+
+// ================
+// Insertable model
+// ================
+#[derive(Insertable)]
+#[table_name = "customers"]
+pub struct CustomersDTO<'a> {
+    pub email: &'a str,
+}
+
+impl<'a> CustomersDTO<'a> {
+    /// Create a new customer and return the number of row affected (1)
+    /// # Params
+    /// * `conn` - The r2d2 connection needed to fetch the data from the db
+    pub fn insert(&self, conn: &ConnType) -> Result<usize, AppError> {
+        Ok(insert_into(dsl_customers).values(self).execute(conn)?)
+    }
+
+    /// Return the newly created customer
+    /// # Params
+    /// * `conn` - The r2d2 connection needed to fetch the data from the db
+    pub fn ginsert(&self, conn: &ConnType) -> Result<Customers, AppError> {
+        Ok(insert_into(dsl_customers).values(self).get_result(conn)?)
+    }
+}
