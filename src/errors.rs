@@ -164,3 +164,13 @@ impl From<uuid::Error> for AppError {
         }
     }
 }
+
+impl From<askama::Error> for AppError {
+    fn from(error: askama::Error) -> AppError {
+        AppError {
+            message: Some(format!("{:?}", error)),
+            cause: None,
+            error_type: AppErrorType::UUIDError,
+        }
+    }
+}
