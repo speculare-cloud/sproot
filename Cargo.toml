@@ -8,7 +8,7 @@ edition = "2018"
 [dependencies]
 actix-web = { version = "4.0", features = ["rustls"] }
 chrono = { version = "0.4", features = ["serde"] }
-diesel = { version = "1.4", features = ["postgres", "r2d2", "chrono"] }
+diesel = { version = "1.4", features = ["postgres", "r2d2", "chrono", "uuidv07"] }
 env_logger = "0.9"
 jsonwebtoken = "8.0"
 log = "0.4"
@@ -19,6 +19,7 @@ simd-json = "0.4"
 sha1_smol = { version = "1.0", features = ["std"] }
 serde = { version = "1.0", features = ["derive"] }
 snmalloc-rs = "0.2"
+uuid = { version = "0.8", features = ["serde", "v4"] }
 walkdir = "2.3"
 
 [profile.release]

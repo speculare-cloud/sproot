@@ -1,3 +1,5 @@
+// bSERVER models
+
 table! {
     cpustats (id) {
         id -> Int8,
@@ -120,6 +122,13 @@ table! {
     }
 }
 
+allow_tables_to_appear_in_same_query!(
+    cpustats, cputimes, disks, hosts, ionets, ioblocks, loadavg, memory, swap,
+);
+
+// !bSERVER models
+// bALERTS models
+
 table! {
     alerts (id) {
         id -> Text,
@@ -158,6 +167,9 @@ table! {
     }
 }
 
+// !bALERTS models
+// bAUTH models
+
 table! {
     apikeys (id) {
         id -> Int4,
@@ -175,6 +187,11 @@ table! {
     }
 }
 
-allow_tables_to_appear_in_same_query!(
-    cpustats, cputimes, disks, hosts, ionets, ioblocks, loadavg, memory, swap,
-);
+table! {
+    customers (id) {
+        id -> Uuid,
+        email -> Varchar,
+    }
+}
+
+// !bAUTH models
