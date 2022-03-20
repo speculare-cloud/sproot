@@ -1,6 +1,8 @@
 use crate::errors::AppError;
 use crate::models::schema::apikeys;
-use crate::models::schema::apikeys::dsl::{apikeys as dsl_apikeys, customer_id, host_uuid, key};
+use crate::models::schema::apikeys::dsl::{
+    apikeys as dsl_apikeys, customer_id, host_uuid, id, key,
+};
 use crate::ConnType;
 
 use diesel::*;
@@ -38,5 +40,23 @@ impl ApiKey {
             .optional()?;
 
         Ok(res.is_some())
+    }
+}
+
+/// Using a specific struct for the Update allow us to pass all as None expect the fields we want to update
+#[derive(AsChangeset, Deserialize, Serialize, Debug, Default)]
+#[table_name = "apikeys"]
+pub struct ApiKeyDTOUpdate {
+    pub key: Option<String>,
+    pub host_uuid: Option<String>,
+    pub customer_id: Option<Uuid>,
+    pub berta: Option<String>,
+}
+
+impl ApiKeyDTOUpdate {
+    pub fn gupdate(&self, conn: &ConnType, target_id: i64) -> Result<ApiKey, AppError> {
+        Ok(update(dsl_apikeys.filter(id.eq(target_id)))
+            .set(self)
+            .get_result(conn)?)
     }
 }
