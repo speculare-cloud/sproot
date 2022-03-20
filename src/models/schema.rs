@@ -175,6 +175,7 @@ table! {
         id -> Int4,
         key -> Text,
         host_uuid -> Varchar,
+        customer_id -> Uuid,
         berta -> Varchar,
     }
 }
@@ -182,7 +183,7 @@ table! {
 table! {
     customers_owning (id) {
         id -> Int4,
-        customer_id -> Varchar,
+        customer_id -> Uuid,
         host_uuid -> Varchar,
     }
 }

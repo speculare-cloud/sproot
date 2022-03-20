@@ -5,6 +5,7 @@ use crate::ConnType;
 
 use diesel::*;
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
 #[derive(Debug, Queryable, QueryableByName, Serialize, Deserialize)]
 #[table_name = "apikeys"]
@@ -12,6 +13,7 @@ pub struct ApiKey {
     pub id: i32,
     pub key: String,
     pub host_uuid: String,
+    pub customer_id: Uuid,
     pub berta: String,
 }
 
