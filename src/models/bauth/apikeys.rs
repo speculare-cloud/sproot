@@ -54,6 +54,12 @@ pub struct ApiKeyDTOUpdate {
 }
 
 impl ApiKeyDTOUpdate {
+    pub fn update(&self, conn: &ConnType, target_id: i64) -> Result<usize, AppError> {
+        Ok(update(dsl_apikeys.filter(id.eq(target_id)))
+            .set(self)
+            .execute(conn)?)
+    }
+
     pub fn gupdate(&self, conn: &ConnType, target_id: i64) -> Result<ApiKey, AppError> {
         Ok(update(dsl_apikeys.filter(id.eq(target_id)))
             .set(self)
