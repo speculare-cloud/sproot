@@ -13,6 +13,7 @@ pub enum AppErrorType {
     ServerError,
     JWTTokenError,
     UUIDError,
+    SerdeError,
 }
 
 #[derive(Debug)]
@@ -78,7 +79,8 @@ impl ResponseError for AppError {
         match self.error_type {
             AppErrorType::InvalidRequest
             | AppErrorType::JWTTokenError
-            | AppErrorType::UUIDError => StatusCode::BAD_REQUEST,
+            | AppErrorType::UUIDError
+            | AppErrorType::SerdeError => StatusCode::BAD_REQUEST,
             AppErrorType::InvalidToken => StatusCode::UNAUTHORIZED,
             AppErrorType::NotFound => StatusCode::NOT_FOUND,
             _ => StatusCode::INTERNAL_SERVER_ERROR,
@@ -171,6 +173,16 @@ impl From<askama::Error> for AppError {
             message: Some(format!("{:?}", error)),
             cause: None,
             error_type: AppErrorType::UUIDError,
+        }
+    }
+}
+
+impl From<serde_json::error::Error> for AppError {
+    fn from(error: serde_json::error::Error) -> AppError {
+        AppError {
+            message: Some(format!("{:?}", error)),
+            cause: None,
+            error_type: AppErrorType::SerdeError,
         }
     }
 }
