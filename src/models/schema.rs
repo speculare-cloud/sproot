@@ -181,14 +181,6 @@ table! {
 }
 
 table! {
-    customers_owning (id) {
-        id -> Int4,
-        customer_id -> Uuid,
-        host_uuid -> Varchar,
-    }
-}
-
-table! {
     customers (id) {
         id -> Uuid,
         email -> Varchar,
