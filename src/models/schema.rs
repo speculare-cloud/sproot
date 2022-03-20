@@ -172,11 +172,11 @@ table! {
 
 table! {
     apikeys (id) {
-        id -> Int4,
+        id -> Int8,
         key -> Text,
-        host_uuid -> Varchar,
+        host_uuid -> Nullable<Text>,
         customer_id -> Uuid,
-        berta -> Varchar,
+        berta -> Text,
     }
 }
 
@@ -186,5 +186,10 @@ table! {
         email -> Varchar,
     }
 }
+
+allow_tables_to_appear_in_same_query!(
+    apikeys,
+    customers,
+);
 
 // !bAUTH models
