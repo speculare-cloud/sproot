@@ -20,7 +20,7 @@ use crate::models::{
     MemoryDTO, SwapDTO,
 };
 
-use diesel::*;
+use diesel::{dsl::any, *};
 use serde::{Deserialize, Serialize};
 
 /// DB Specific struct for hosts table
@@ -161,6 +161,14 @@ impl Host {
             .offset(page * size)
             .order_by(hostname.asc())
             .load(conn)?)
+    }
+
+    /// Return a Vector of Host
+    /// # Params
+    /// * `conn` - The r2d2 connection needed to fetch the data from the db
+    /// * `hosts_uuid` - The uuids of the hosts you want to get info
+    pub fn get_from_uuid(conn: &ConnType, hosts_uuid: &[String]) -> Result<Vec<Self>, AppError> {
+        Ok(dsl_host.filter(uuid.eq(any(hosts_uuid))).load(conn)?)
     }
 }
 

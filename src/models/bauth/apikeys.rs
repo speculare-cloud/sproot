@@ -41,6 +41,27 @@ impl ApiKey {
 
         Ok(res.is_some())
     }
+
+    /// Get a list of Some(host_uuid) owned by the customer
+    /// # Params
+    /// * `conn` - The r2d2 connection needed to fetch the data from the db
+    /// * `cid` - The customer ID
+    pub fn get_host_by_owned(
+        conn: &ConnType,
+        cid: &Uuid,
+        size: i64,
+        page: i64,
+    ) -> Result<Vec<String>, AppError> {
+        let res = dsl_apikeys
+            .select(host_uuid)
+            .filter(customer_id.eq(cid).and(host_uuid.is_not_null()))
+            .limit(size)
+            .offset(page * size)
+            .order_by(host_uuid.asc())
+            .get_results::<Option<String>>(conn)?;
+        // Remove None from the Vec
+        Ok(res.into_iter().flatten().collect())
+    }
 }
 
 /// Using a specific struct for the Update allow us to pass all as None expect the fields we want to update
