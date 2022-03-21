@@ -3,7 +3,6 @@ use crate::models::schema::alerts;
 use crate::models::schema::alerts::dsl::{_name, alerts as dsl_alerts, host_uuid, id};
 use crate::ConnType;
 
-use anyhow::{anyhow, Result};
 use diesel::*;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
@@ -136,7 +135,7 @@ pub struct AlertsConfig {
 impl AlertsConfig {
     /// Construct AlertsConfig Vec from the path of configs's folder & sub
     #[allow(clippy::result_unit_err)]
-    pub fn from_configs_path(path: &str) -> Result<Vec<AlertsConfig>> {
+    pub fn from_configs_path(path: &str) -> Result<Vec<AlertsConfig>, AppError> {
         let mut alerts: Vec<AlertsConfig> = Vec::new();
 
         for entry in WalkDir::new(&path).min_depth(1).max_depth(2) {
@@ -152,19 +151,21 @@ impl AlertsConfig {
             let parent_entry = entry
                 .path()
                 .parent()
-                .ok_or_else(|| anyhow!("error: .path().parent() returned None"))?;
+                .ok_or_else(|| AppError::new("error: .path().parent() returned None".to_owned()))?;
 
             let host_targeted = if parent_entry == PathBuf::from(&path) {
                 HostTargeted::ALL
             } else {
-                let parent_name = parent_entry
-                    .file_name()
-                    .ok_or_else(|| anyhow!("error: parent_entry.file_name() returned None"))?;
+                let parent_name = parent_entry.file_name().ok_or_else(|| {
+                    AppError::new("error: parent_entry.file_name() returned None".to_owned())
+                })?;
 
                 HostTargeted::SPECIFIC(
                     parent_name
                         .to_str()
-                        .ok_or_else(|| anyhow!("error: parent_name.to_str() returned None"))?
+                        .ok_or_else(|| {
+                            AppError::new("error: parent_name.to_str() returned None".to_owned())
+                        })?
                         .to_owned(),
                 )
             };

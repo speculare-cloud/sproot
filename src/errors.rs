@@ -1,64 +1,62 @@
-use actix_web::{error::ResponseError, http::StatusCode, HttpResponse};
+use actix_web::{http::StatusCode, HttpResponse};
 use serde::Serialize;
 use std::fmt;
 
 #[derive(Debug, PartialEq)]
 pub enum AppErrorType {
-    DbError,
+    ActixError,
+    DieselError,
     NotFound,
     PoolError,
     InvalidRequest,
     InvalidToken,
     BlockingError,
     ServerError,
-    JWTTokenError,
     UUIDError,
     SerdeError,
+    InvalidJwtError,
+    ExpiredJwtError,
+    OtherJwtError,
+    WalkDirError,
 }
 
 #[derive(Debug)]
 pub struct AppError {
-    pub message: Option<String>,
-    pub cause: Option<String>,
+    pub message: String,
     pub error_type: AppErrorType,
 }
 
 impl AppError {
+    pub fn new(message: String) -> Self {
+        Self {
+            message,
+            error_type: AppErrorType::ServerError,
+        }
+    }
+
     pub fn message(&self) -> String {
         match &*self {
             AppError {
-                message: Some(message),
-                cause: Some(cause),
-                ..
-            } => format!("{} : {}", message, cause),
-            AppError {
-                message: Some(message),
-                ..
-            } => message.clone(),
-            AppError {
-                cause: Some(cause), ..
-            } => cause.clone(),
-            AppError {
                 error_type: AppErrorType::NotFound,
                 ..
-            } => "The requested ressource doesn't exists.".to_string(),
+            } => "The requested resource doesn't exists.".to_owned(),
             AppError {
                 error_type: AppErrorType::PoolError,
                 ..
-            } => "Cannot get a connection from the pool for the database".to_string(),
+            } => "Cannot get a connection from the R2D2's pool".to_owned(),
             AppError {
                 error_type: AppErrorType::InvalidToken,
                 ..
-            } => "The token is invalid or has expired".to_string(),
+            } => "The token is invalid or has expired".to_owned(),
             AppError {
                 error_type: AppErrorType::InvalidRequest,
                 ..
-            } => "Invalid request".to_string(),
+            } => "Invalid request".to_owned(),
             AppError {
                 error_type: AppErrorType::ServerError,
                 ..
-            } => "Server error".to_string(),
-            _ => "An unexpected error has occurred".to_string(),
+            } => "Server error, try again later".to_owned(),
+            AppError { message, .. } => message.to_owned(),
         }
     }
 }
@@ -75,14 +73,15 @@ struct ErrorResponse {
     error: String,
 }
 
-impl ResponseError for AppError {
+impl actix_web::error::ResponseError for AppError {
     fn status_code(&self) -> StatusCode {
         match self.error_type {
-            AppErrorType::InvalidRequest
-            | AppErrorType::JWTTokenError
-            | AppErrorType::UUIDError
-            | AppErrorType::SerdeError => StatusCode::BAD_REQUEST,
-            AppErrorType::InvalidToken => StatusCode::UNAUTHORIZED,
+            AppErrorType::InvalidRequest | AppErrorType::UUIDError | AppErrorType::SerdeError => {
+                StatusCode::BAD_REQUEST
+            }
+            AppErrorType::InvalidToken
+            | AppErrorType::ExpiredJwtError
+            | AppErrorType::InvalidJwtError => StatusCode::UNAUTHORIZED,
             AppErrorType::NotFound => StatusCode::NOT_FOUND,
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         }
@@ -93,6 +92,7 @@ impl ResponseError for AppError {
             code: status_code.as_u16(),
             error: self.message(),
         };
+
         HttpResponse::build(status_code).json(error_response)
     }
 }
@@ -100,9 +100,8 @@ impl ResponseError for AppError {
 impl From<std::num::ParseIntError> for AppError {
     fn from(error: std::num::ParseIntError) -> AppError {
         AppError {
-            message: None,
-            cause: Some(error.to_string()),
-            error_type: AppErrorType::DbError,
+            message: format!("{}", error),
+            error_type: AppErrorType::ServerError,
         }
     }
 }
@@ -110,8 +109,7 @@ impl From<std::num::ParseIntError> for AppError {
 impl From<r2d2::Error> for AppError {
     fn from(error: r2d2::Error) -> AppError {
         AppError {
-            message: None,
-            cause: Some(error.to_string()),
+            message: format!("{}", error),
             error_type: AppErrorType::PoolError,
         }
     }
@@ -121,11 +119,11 @@ impl From<diesel::result::Error> for AppError {
     fn from(error: diesel::result::Error) -> AppError {
         let error_type = match error {
             diesel::result::Error::NotFound => AppErrorType::NotFound,
-            _ => AppErrorType::DbError,
+            _ => AppErrorType::DieselError,
         };
+
         AppError {
-            message: None,
-            cause: Some(error.to_string()),
+            message: format!("{}", error),
             error_type,
         }
     }
@@ -134,9 +132,8 @@ impl From<diesel::result::Error> for AppError {
 impl From<actix_web::Error> for AppError {
     fn from(error: actix_web::Error) -> AppError {
         AppError {
-            message: None,
-            cause: Some(error.to_string()),
-            error_type: AppErrorType::DbError,
+            message: format!("{}", error),
+            error_type: AppErrorType::ActixError,
         }
     }
 }
@@ -144,8 +141,7 @@ impl From<actix_web::Error> for AppError {
 impl From<actix_web::error::BlockingError> for AppError {
     fn from(error: actix_web::error::BlockingError) -> AppError {
         AppError {
-            message: None,
-            cause: Some(error.to_string()),
+            message: format!("{}", error),
             error_type: AppErrorType::BlockingError,
         }
     }
@@ -153,10 +149,19 @@ impl From<actix_web::error::BlockingError> for AppError {
 
 impl From<jsonwebtoken::errors::Error> for AppError {
     fn from(error: jsonwebtoken::errors::Error) -> AppError {
+        let error_type = match error.kind() {
+            jsonwebtoken::errors::ErrorKind::ExpiredSignature => AppErrorType::ExpiredJwtError,
+            jsonwebtoken::errors::ErrorKind::InvalidToken
+            | jsonwebtoken::errors::ErrorKind::InvalidKeyFormat
+            | jsonwebtoken::errors::ErrorKind::InvalidAlgorithmName
+            | jsonwebtoken::errors::ErrorKind::ImmatureSignature
+            | jsonwebtoken::errors::ErrorKind::InvalidAlgorithm => AppErrorType::InvalidJwtError,
+            _ => AppErrorType::OtherJwtError,
+        };
+
         AppError {
-            message: Some(format!("{:?}", error.kind())),
-            cause: None,
-            error_type: AppErrorType::JWTTokenError,
+            message: format!("{}", error),
+            error_type,
         }
     }
 }
@@ -164,8 +169,7 @@ impl From<jsonwebtoken::errors::Error> for AppError {
 impl From<uuid::Error> for AppError {
     fn from(error: uuid::Error) -> AppError {
         AppError {
-            message: Some(format!("{:?}", error)),
-            cause: None,
+            message: format!("{:?}", error),
             error_type: AppErrorType::UUIDError,
         }
     }
@@ -174,9 +178,8 @@ impl From<uuid::Error> for AppError {
 impl From<askama::Error> for AppError {
     fn from(error: askama::Error) -> AppError {
         AppError {
-            message: Some(format!("{:?}", error)),
-            cause: None,
-            error_type: AppErrorType::UUIDError,
+            message: format!("{:?}", error),
+            error_type: AppErrorType::ServerError,
         }
     }
 }
@@ -184,8 +187,34 @@ impl From<askama::Error> for AppError {
 impl From<serde_json::error::Error> for AppError {
     fn from(error: serde_json::error::Error) -> AppError {
         AppError {
-            message: Some(format!("{:?}", error)),
-            cause: None,
+            message: format!("{:?}", error),
+            error_type: AppErrorType::SerdeError,
+        }
+    }
+}
+
+impl From<walkdir::Error> for AppError {
+    fn from(error: walkdir::Error) -> AppError {
+        AppError {
+            message: format!("{:?}", error),
+            error_type: AppErrorType::WalkDirError,
+        }
+    }
+}
+
+impl From<std::io::Error> for AppError {
+    fn from(error: std::io::Error) -> AppError {
+        AppError {
+            message: format!("{:?}", error),
+            error_type: AppErrorType::WalkDirError,
+        }
+    }
+}
+
+impl From<simd_json::Error> for AppError {
+    fn from(error: simd_json::Error) -> AppError {
+        AppError {
+            message: format!("{:?}", error),
             error_type: AppErrorType::SerdeError,
         }
     }
