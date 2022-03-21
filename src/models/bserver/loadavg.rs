@@ -2,9 +2,7 @@ use crate::errors::AppError;
 use crate::ConnType;
 
 use crate::models::schema::loadavg;
-use crate::models::schema::loadavg::dsl::{
-    created_at, fifteen, five, host_uuid, loadavg as dsl_loadavg, one,
-};
+use crate::models::schema::loadavg::dsl::{created_at, host_uuid, loadavg as dsl_loadavg};
 use crate::models::{get_granularity, HttpPostHost};
 
 use diesel::{
@@ -61,51 +59,39 @@ impl LoadAvg {
     ) -> Result<Vec<LoadAvgDTORaw>, AppError> {
         let size = (max_date - min_date).num_seconds();
         let granularity = get_granularity(size);
-        if granularity <= 1 {
-            Ok(dsl_loadavg
-                .select((one, five, fifteen, created_at))
-                .filter(
-                    host_uuid
-                        .eq(uuid)
-                        .and(created_at.gt(min_date).and(created_at.le(max_date))),
-                )
-                .limit(size)
-                .order_by(created_at.desc())
-                .load(conn)?)
-        } else {
-            // Dummy require to ensure no issue if table name change.
-            // If the table's name is to be changed, we have to change it from the sql_query below.
-            {
-                #[allow(unused_imports)]
-                use crate::models::schema::loadavg;
-            }
 
-            // Prepare and run the query
-            Ok(sql_query(format!(
-                "
-                WITH s AS (
-                    SELECT 
-                        avg(one)::float8 as one, 
-                        avg(five)::float8 as five, 
-                        avg(fifteen)::float8 as fifteen, 
-                        time_bucket('{}s', created_at) as time 
-                    FROM loadavg 
-                    WHERE host_uuid=$1 AND created_at BETWEEN $2 AND $3 
-                    GROUP BY time ORDER BY time DESC
-                )
-                SELECT 
-                    one,
-                    five,
-                    fifteen,
-                    time as created_at
-                FROM s",
-                granularity
-            ))
-            .bind::<Text, _>(uuid)
-            .bind::<Timestamp, _>(min_date)
-            .bind::<Timestamp, _>(max_date)
-            .load(conn)?)
+        // Dummy require to ensure no issue if table name change.
+        // If the table's name is to be changed, we have to change it from the sql_query below.
+        {
+            #[allow(unused_imports)]
+            use crate::models::schema::loadavg;
         }
+
+        // Prepare and run the query
+        Ok(sql_query(format!(
+            "
+            WITH s AS (
+                SELECT
+                    avg(one)::float8 as one,
+                    avg(five)::float8 as five,
+                    avg(fifteen)::float8 as fifteen,
+                    time_bucket('{}s', created_at) as time
+                FROM loadavg
+                WHERE host_uuid=$1 AND created_at BETWEEN $2 AND $3
+                GROUP BY time ORDER BY time DESC
+            )
+            SELECT
+                one,
+                five,
+                fifteen,
+                time as created_at
+            FROM s",
+            granularity
+        ))
+        .bind::<Text, _>(uuid)
+        .bind::<Timestamp, _>(min_date)
+        .bind::<Timestamp, _>(max_date)
+        .load(conn)?)
     }
 }
 

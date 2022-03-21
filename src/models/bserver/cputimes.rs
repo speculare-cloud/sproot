@@ -2,10 +2,7 @@ use crate::errors::AppError;
 use crate::ConnType;
 
 use crate::models::schema::cputimes;
-use crate::models::schema::cputimes::dsl::{
-    cputimes as dsl_cputimes, created_at, cuser, host_uuid, idle, iowait, irq, nice, softirq,
-    steal, system,
-};
+use crate::models::schema::cputimes::dsl::{cputimes as dsl_cputimes, created_at, host_uuid};
 use crate::models::{get_granularity, HttpPostHost};
 
 use diesel::{
@@ -69,63 +66,49 @@ impl CpuTimes {
     ) -> Result<Vec<CpuTimesDTORaw>, AppError> {
         let size = (max_date - min_date).num_seconds();
         let granularity = get_granularity(size);
-        if granularity <= 1 {
-            Ok(dsl_cputimes
-                .select((
-                    cuser, nice, system, idle, iowait, irq, softirq, steal, created_at,
-                ))
-                .filter(
-                    host_uuid
-                        .eq(uuid)
-                        .and(created_at.gt(min_date).and(created_at.le(max_date))),
-                )
-                .limit(size)
-                .order_by(created_at.desc())
-                .load(conn)?)
-        } else {
-            // Dummy require to ensure no issue if table name change.
-            // If the table's name is to be changed, we have to change it from the sql_query below.
-            {
-                #[allow(unused_imports)]
-                use crate::models::schema::cputimes;
-            }
 
-            // Prepare and run the query
-            Ok(sql_query(format!(
-                "
-                WITH s AS (
-                    SELECT 
-                        avg(cuser)::int8 as cuser, 
-                        avg(nice)::int8 as nice, 
-                        avg(system)::int8 as system, 
-                        avg(idle)::int8 as idle, 
-                        avg(iowait)::int8 as iowait, 
-                        avg(irq)::int8 as irq, 
-                        avg(softirq)::int8 as softirq, 
-                        avg(steal)::int8 as steal, 
-                        time_bucket('{}s', created_at) as time 
-                    FROM cputimes 
-                    WHERE host_uuid=$1 AND created_at BETWEEN $2 AND $3 
-                    GROUP BY time ORDER BY time DESC
-                )
-                SELECT 
-                    cuser,
-                    nice,
-                    system,
-                    idle,
-                    iowait,
-                    irq,
-                    softirq,
-                    steal,
-                    time as created_at
-                FROM s",
-                granularity
-            ))
-            .bind::<Text, _>(uuid)
-            .bind::<Timestamp, _>(min_date)
-            .bind::<Timestamp, _>(max_date)
-            .load(conn)?)
+        // Dummy require to ensure no issue if table name change.
+        // If the table's name is to be changed, we have to change it from the sql_query below.
+        {
+            #[allow(unused_imports)]
+            use crate::models::schema::cputimes;
         }
+
+        // Prepare and run the query
+        Ok(sql_query(format!(
+            "
+            WITH s AS (
+                SELECT
+                    avg(cuser)::int8 as cuser,
+                    avg(nice)::int8 as nice,
+                    avg(system)::int8 as system,
+                    avg(idle)::int8 as idle,
+                    avg(iowait)::int8 as iowait,
+                    avg(irq)::int8 as irq,
+                    avg(softirq)::int8 as softirq,
+                    avg(steal)::int8 as steal,
+                    time_bucket('{}s', created_at) as time
+                FROM cputimes
+                WHERE host_uuid=$1 AND created_at BETWEEN $2 AND $3
+                GROUP BY time ORDER BY time DESC
+            )
+            SELECT
+                cuser,
+                nice,
+                system,
+                idle,
+                iowait,
+                irq,
+                softirq,
+                steal,
+                time as created_at
+            FROM s",
+            granularity
+        ))
+        .bind::<Text, _>(uuid)
+        .bind::<Timestamp, _>(min_date)
+        .bind::<Timestamp, _>(max_date)
+        .load(conn)?)
     }
 }
 

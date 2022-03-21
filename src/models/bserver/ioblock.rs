@@ -2,9 +2,7 @@ use crate::errors::AppError;
 use crate::ConnType;
 
 use crate::models::schema::ioblocks;
-use crate::models::schema::ioblocks::dsl::{
-    created_at, device_name, host_uuid, ioblocks as dsl_ioblocks, read_bytes, write_bytes,
-};
+use crate::models::schema::ioblocks::dsl::{created_at, host_uuid, ioblocks as dsl_ioblocks};
 use crate::models::{get_granularity, HttpPostHost};
 
 use diesel::{
@@ -63,55 +61,40 @@ impl IoBlock {
         max_date: chrono::NaiveDateTime,
     ) -> Result<Vec<IoBlockDTORaw>, AppError> {
         let size = (max_date - min_date).num_seconds();
-
         let granularity = get_granularity(size);
-        if granularity <= 1 {
-            Ok(dsl_ioblocks
-                .select((device_name, read_bytes, write_bytes, created_at))
-                .filter(
-                    host_uuid
-                        .eq(uuid)
-                        .and(created_at.gt(min_date).and(created_at.le(max_date))),
-                )
-                // size * 10 as workaround for the moment
-                // TODO - Size * by the number of disks in the system
-                .limit(size * 10)
-                .order_by(created_at.desc())
-                .load(conn)?)
-        } else {
-            // Dummy require to ensure no issue if table name change.
-            // If the table's name is to be changed, we have to change it from the sql_query below.
-            {
-                #[allow(unused_imports)]
-                use crate::models::schema::ioblocks;
-            }
 
-            // Prepare and run the query
-            Ok(sql_query(format!(
-                "
-                WITH s AS (
-                    SELECT 
-                        device_name, 
-                        avg(read_bytes)::int8 as read_bytes, 
-                        avg(write_bytes)::int8 as write_bytes, 
-                        time_bucket('{}s', created_at) as time 
-                    FROM ioblocks 
-                    WHERE host_uuid=$1 AND created_at BETWEEN $2 AND $3 
-                    GROUP BY time,device_name ORDER BY time DESC
-                )
-                SELECT 
-                    device_name,
-                    read_bytes,
-                    write_bytes,
-                    time as created_at
-                FROM s",
-                granularity
-            ))
-            .bind::<Text, _>(uuid)
-            .bind::<Timestamp, _>(min_date)
-            .bind::<Timestamp, _>(max_date)
-            .load(conn)?)
+        // Dummy require to ensure no issue if table name change.
+        // If the table's name is to be changed, we have to change it from the sql_query below.
+        {
+            #[allow(unused_imports)]
+            use crate::models::schema::ioblocks;
         }
+
+        // Prepare and run the query
+        Ok(sql_query(format!(
+            "
+            WITH s AS (
+                SELECT
+                    device_name,
+                    avg(read_bytes)::int8 as read_bytes,
+                    avg(write_bytes)::int8 as write_bytes,
+                    time_bucket('{}s', created_at) as time
+                FROM ioblocks
+                WHERE host_uuid=$1 AND created_at BETWEEN $2 AND $3
+                GROUP BY time,device_name ORDER BY time DESC
+            )
+            SELECT
+                device_name,
+                read_bytes,
+                write_bytes,
+                time as created_at
+            FROM s",
+            granularity
+        ))
+        .bind::<Text, _>(uuid)
+        .bind::<Timestamp, _>(min_date)
+        .bind::<Timestamp, _>(max_date)
+        .load(conn)?)
     }
 
     /// Return the numbers of ioblocks the host have
@@ -129,15 +112,15 @@ impl IoBlock {
 
         let res = sql_query(
             "
-            WITH s AS 
-                (SELECT id, device_name, created_at 
-                    FROM ioblocks 
-                    WHERE host_uuid=$1 
-                    ORDER BY created_at 
+            WITH s AS
+                (SELECT id, device_name, created_at
+                    FROM ioblocks
+                    WHERE host_uuid=$1
+                    ORDER BY created_at
                     DESC LIMIT $2
-                ) 
-            SELECT 
-                COUNT(DISTINCT device_name) 
+                )
+            SELECT
+                COUNT(DISTINCT device_name)
                 FROM s",
         )
         .bind::<Text, _>(uuid)

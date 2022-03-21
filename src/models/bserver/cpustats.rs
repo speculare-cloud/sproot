@@ -2,10 +2,7 @@ use crate::errors::AppError;
 use crate::ConnType;
 
 use crate::models::schema::cpustats;
-use crate::models::schema::cpustats::dsl::{
-    cpustats as dsl_cpustats, created_at, ctx_switches, host_uuid, interrupts, processes,
-    procs_blocked, procs_running, soft_interrupts,
-};
+use crate::models::schema::cpustats::dsl::{cpustats as dsl_cpustats, created_at, host_uuid};
 use crate::models::{get_granularity, HttpPostHost};
 
 use diesel::{
@@ -65,65 +62,45 @@ impl CpuStats {
     ) -> Result<Vec<CpuStatsDTORaw>, AppError> {
         let size = (max_date - min_date).num_seconds();
         let granularity = get_granularity(size);
-        if granularity <= 1 {
-            Ok(dsl_cpustats
-                .select((
-                    interrupts,
-                    ctx_switches,
-                    soft_interrupts,
-                    processes,
-                    procs_running,
-                    procs_blocked,
-                    created_at,
-                ))
-                .filter(
-                    host_uuid
-                        .eq(uuid)
-                        .and(created_at.gt(min_date).and(created_at.le(max_date))),
-                )
-                .limit(size)
-                .order_by(created_at.desc())
-                .load(conn)?)
-        } else {
-            // Dummy require to ensure no issue if table name change.
-            // If the table's name is to be changed, we have to change it from the sql_query below.
-            {
-                #[allow(unused_imports)]
-                use crate::models::schema::cpustats;
-            }
 
-            // Prepare and run the query
-            Ok(sql_query(format!(
-                "
-                WITH s AS (
-                    SELECT 
-                        avg(interrupts)::int8 as interrupts, 
-                        avg(ctx_switches)::int8 as ctx_switches, 
-                        avg(soft_interrupts)::int8 as soft_interrupts,
-                        avg(processes)::int8 as processes,
-                        avg(procs_running)::int8 as procs_running,
-                        avg(procs_blocked)::int8 as procs_blocked, 
-                        time_bucket('{}s', created_at) as time 
-                    FROM cpustats 
-                    WHERE host_uuid=$1 AND created_at BETWEEN $2 AND $3 
-                    GROUP BY time ORDER BY time DESC
-                )
-                SELECT 
-                    interrupts, 
-                    ctx_switches, 
-                    soft_interrupts, 
-                    processes, 
-                    procs_running, 
-                    procs_blocked, 
-                    time as created_at 
-                FROM s",
-                granularity
-            ))
-            .bind::<Text, _>(uuid)
-            .bind::<Timestamp, _>(min_date)
-            .bind::<Timestamp, _>(max_date)
-            .load(conn)?)
+        // Dummy require to ensure no issue if table name change.
+        // If the table's name is to be changed, we have to change it from the sql_query below.
+        {
+            #[allow(unused_imports)]
+            use crate::models::schema::cpustats;
         }
+
+        // Prepare and run the query
+        Ok(sql_query(format!(
+            "
+            WITH s AS (
+                SELECT
+                    avg(interrupts)::int8 as interrupts,
+                    avg(ctx_switches)::int8 as ctx_switches,
+                    avg(soft_interrupts)::int8 as soft_interrupts,
+                    avg(processes)::int8 as processes,
+                    avg(procs_running)::int8 as procs_running,
+                    avg(procs_blocked)::int8 as procs_blocked,
+                    time_bucket('{}s', created_at) as time
+                FROM cpustats
+                WHERE host_uuid=$1 AND created_at BETWEEN $2 AND $3
+                GROUP BY time ORDER BY time DESC
+            )
+            SELECT
+                interrupts,
+                ctx_switches,
+                soft_interrupts,
+                processes,
+                procs_running,
+                procs_blocked,
+                time as created_at
+            FROM s",
+            granularity
+        ))
+        .bind::<Text, _>(uuid)
+        .bind::<Timestamp, _>(min_date)
+        .bind::<Timestamp, _>(max_date)
+        .load(conn)?)
     }
 }
 
