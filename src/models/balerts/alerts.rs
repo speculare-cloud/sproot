@@ -3,8 +3,8 @@ use crate::models::schema::alerts;
 use crate::models::schema::alerts::dsl::{_name, alerts as dsl_alerts, host_uuid, id};
 use crate::ConnType;
 
+use anyhow::{anyhow, Result};
 use diesel::*;
-use log::error;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use walkdir::WalkDir;
@@ -136,41 +136,37 @@ pub struct AlertsConfig {
 impl AlertsConfig {
     /// Construct AlertsConfig Vec from the path of configs's folder & sub
     #[allow(clippy::result_unit_err)]
-    pub fn from_configs_path(path: &str) -> Result<Vec<AlertsConfig>, ()> {
+    pub fn from_configs_path(path: &str) -> Result<Vec<AlertsConfig>> {
         let mut alerts: Vec<AlertsConfig> = Vec::new();
 
         for entry in WalkDir::new(&path).min_depth(1).max_depth(2) {
             // Detect if the WalkDir failed to read the folder (permissions/...)
-            if entry.is_err() {
-                error!("Cannot read the entry due to: {}", entry.unwrap_err());
-                return Err(());
-            }
-            let entry = entry.unwrap();
+            let entry = entry?;
 
             // Skip if folder
             if entry.path().is_dir() {
                 continue;
             }
 
-            // TODO - Small rewrite needed ? Too much of a stair
             // Get the parent folder name and determine which hosts is targeted
-            let host_targeted: HostTargeted = if let Some(parent_entry) = entry.path().parent() {
-                if parent_entry == PathBuf::from(&path) {
-                    HostTargeted::ALL
-                } else if let Some(parent_name) = parent_entry.file_name() {
-                    if let Some(targeted_str) = parent_name.to_str() {
-                        HostTargeted::SPECIFIC(targeted_str.to_owned())
-                    } else {
-                        error!("Cannot get the targeted_str, OsStr to Str is None");
-                        return Err(());
-                    }
-                } else {
-                    error!("Cannot get the parent_name, parent_entry filename is None");
-                    return Err(());
-                }
+            let parent_entry = entry
+                .path()
+                .parent()
+                .ok_or_else(|| anyhow!("error: .path().parent() returned None"))?;
+
+            let host_targeted = if parent_entry == PathBuf::from(&path) {
+                HostTargeted::ALL
             } else {
-                error!("Cannot get the parent_entry directory name, returned None");
-                return Err(());
+                let parent_name = parent_entry
+                    .file_name()
+                    .ok_or_else(|| anyhow!("error: parent_entry.file_name() returned None"))?;
+
+                HostTargeted::SPECIFIC(
+                    parent_name
+                        .to_str()
+                        .ok_or_else(|| anyhow!("error: parent_name.to_str() returned None"))?
+                        .to_owned(),
+                )
             };
 
             trace!(
@@ -180,27 +176,9 @@ impl AlertsConfig {
             );
 
             // Read and store the content of the config into a string
-            let content = std::fs::read_to_string(entry.path());
-            if content.is_err() {
-                error!(
-                    "Cannot read {:?}: {}",
-                    entry.path().file_name(),
-                    content.unwrap_err()
-                );
-                return Err(());
-            }
-
+            let mut content = std::fs::read_to_string(entry.path())?;
             // Deserialize the string's config into the struct of AlertsConfig
-            let alert_config = simd_json::from_str::<AlertsConfig>(&mut content.unwrap());
-            if alert_config.is_err() {
-                error!(
-                    "Cannot convert {:?} to AlertsConfig: {}",
-                    entry.path().file_name(),
-                    alert_config.unwrap_err()
-                );
-                return Err(());
-            }
-            let mut alert_config = alert_config.unwrap();
+            let mut alert_config = simd_json::from_str::<AlertsConfig>(&mut content)?;
             alert_config.host_targeted = Some(host_targeted);
 
             // Add the AlertsConfig into the Vec
