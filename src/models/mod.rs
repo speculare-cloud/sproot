@@ -21,5 +21,5 @@ pub use bserver::*;
 pub fn get_granularity(size: i64) -> u16 {
     assert!(size < 23000000);
     // Casting to u16 is safe as per the check above as u16 max value is 65535 and is not reached unless size is 23000000
-    ((0.003 * size as f32) * (0.93) + 0.298206) as u16
+    std::cmp::max(1, ((0.003 * size as f32) * (0.93) + 0.298206) as u16)
 }
