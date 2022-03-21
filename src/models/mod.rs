@@ -18,8 +18,9 @@ pub use bserver::*;
 ///  size = 21600 => 60
 /// which means for size = 21600 that we'll get the avg of each 60s intervals
 #[inline]
-pub fn get_granularity(size: i64) -> u16 {
-    assert!(size < 23000000);
-    // Casting to u16 is safe as per the check above as u16 max value is 65535 and is not reached unless size is 23000000
-    std::cmp::max(1, ((0.003 * size as f32) * (0.93) + 0.298206) as u16)
+pub fn get_granularity(size: i64) -> u32 {
+    std::cmp::min(
+        86400,
+        std::cmp::max(1, ((0.003 * size as f32) * (0.93) + 0.298206) as u32),
+    )
 }
