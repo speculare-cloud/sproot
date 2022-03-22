@@ -172,13 +172,12 @@ pub struct IoNetDTO<'a> {
     pub created_at: chrono::NaiveDateTime,
 }
 
-pub type IoNetDTOList<'a> = Vec<IoNetDTO<'a>>;
-impl<'a> From<&'a HttpPostHost> for Option<IoNetDTOList<'a>> {
-    fn from(item: &'a HttpPostHost) -> Option<IoNetDTOList<'a>> {
+impl<'a> IoNetDTO<'a> {
+    pub fn cfrom(item: &'a HttpPostHost, huuid: &'a str) -> Option<Vec<IoNetDTO<'a>>> {
         let ionets = item.ionets.as_ref()?;
         let mut list = Vec::with_capacity(ionets.len());
         for iocounter in ionets {
-            list.push(IoNetDTO {
+            list.push(Self {
                 interface: &iocounter.interface,
                 rx_bytes: iocounter.rx_bytes,
                 rx_packets: iocounter.rx_packets,
@@ -188,7 +187,7 @@ impl<'a> From<&'a HttpPostHost> for Option<IoNetDTOList<'a>> {
                 tx_packets: iocounter.tx_packets,
                 tx_errs: iocounter.tx_errs,
                 tx_drop: iocounter.tx_drop,
-                host_uuid: &item.uuid,
+                host_uuid: huuid,
                 created_at: item.created_at,
             })
         }

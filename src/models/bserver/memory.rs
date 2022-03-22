@@ -126,17 +126,17 @@ pub struct MemoryDTO<'a> {
     pub created_at: chrono::NaiveDateTime,
 }
 
-impl<'a> From<&'a HttpPostHost> for Option<MemoryDTO<'a>> {
-    fn from(item: &'a HttpPostHost) -> Option<MemoryDTO<'a>> {
+impl<'a> MemoryDTO<'a> {
+    pub fn cfrom(item: &'a HttpPostHost, huuid: &'a str) -> Option<MemoryDTO<'a>> {
         let memory = item.memory.as_ref()?;
-        Some(MemoryDTO {
+        Some(Self {
             total: memory.total as i64,
             free: memory.free as i64,
             used: memory.used as i64,
             shared: memory.shared as i64,
             buffers: memory.buffers as i64,
             cached: memory.cached as i64,
-            host_uuid: &item.uuid,
+            host_uuid: huuid,
             created_at: item.created_at,
         })
     }

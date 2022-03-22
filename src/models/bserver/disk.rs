@@ -162,18 +162,17 @@ pub struct DiskDTO<'a> {
     pub created_at: chrono::NaiveDateTime,
 }
 
-pub type DiskDTOList<'a> = Vec<DiskDTO<'a>>;
-impl<'a> From<&'a HttpPostHost> for Option<DiskDTOList<'a>> {
-    fn from(item: &'a HttpPostHost) -> Option<DiskDTOList<'a>> {
+impl<'a> DiskDTO<'a> {
+    pub fn cfrom(item: &'a HttpPostHost, huuid: &'a str) -> Option<Vec<DiskDTO<'a>>> {
         let disks = item.disks.as_ref()?;
         let mut list = Vec::with_capacity(disks.len());
         for disk in disks {
-            list.push(DiskDTO {
+            list.push(Self {
                 disk_name: &disk.name,
                 mount_point: &disk.mount_point,
                 total_space: disk.total_space,
                 avail_space: disk.avail_space,
-                host_uuid: &item.uuid,
+                host_uuid: huuid,
                 created_at: item.created_at,
             })
         }

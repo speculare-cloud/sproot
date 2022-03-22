@@ -132,17 +132,17 @@ pub struct CpuStatsDTO<'a> {
     pub created_at: chrono::NaiveDateTime,
 }
 
-impl<'a> From<&'a HttpPostHost> for Option<CpuStatsDTO<'a>> {
-    fn from(item: &'a HttpPostHost) -> Option<CpuStatsDTO<'a>> {
+impl<'a> CpuStatsDTO<'a> {
+    pub fn cfrom(item: &'a HttpPostHost, huuid: &'a str) -> Option<CpuStatsDTO<'a>> {
         let cpustats = item.cpu_stats.as_ref()?;
-        Some(CpuStatsDTO {
+        Some(Self {
             interrupts: cpustats.interrupts,
             ctx_switches: cpustats.ctx_switches,
             soft_interrupts: cpustats.soft_interrupts,
             processes: cpustats.processes,
             procs_running: cpustats.procs_running,
             procs_blocked: cpustats.procs_blocked,
-            host_uuid: &item.uuid,
+            host_uuid: huuid,
             created_at: item.created_at,
         })
     }

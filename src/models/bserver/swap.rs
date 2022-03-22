@@ -117,14 +117,14 @@ pub struct SwapDTO<'a> {
     pub created_at: chrono::NaiveDateTime,
 }
 
-impl<'a> From<&'a HttpPostHost> for Option<SwapDTO<'a>> {
-    fn from(item: &'a HttpPostHost) -> Option<SwapDTO<'a>> {
+impl<'a> SwapDTO<'a> {
+    pub fn cfrom(item: &'a HttpPostHost, huuid: &'a str) -> Option<SwapDTO<'a>> {
         let swap = item.swap.as_ref()?;
-        Some(SwapDTO {
+        Some(Self {
             total: swap.total as i64,
             free: swap.free as i64,
             used: swap.used as i64,
-            host_uuid: &item.uuid,
+            host_uuid: huuid,
             created_at: item.created_at,
         })
     }

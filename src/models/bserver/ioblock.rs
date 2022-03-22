@@ -166,20 +166,19 @@ pub struct IoBlockDTO<'a> {
     pub created_at: chrono::NaiveDateTime,
 }
 
-pub type IoBlockDTOList<'a> = Vec<IoBlockDTO<'a>>;
-impl<'a> From<&'a HttpPostHost> for Option<IoBlockDTOList<'a>> {
-    fn from(item: &'a HttpPostHost) -> Option<IoBlockDTOList<'a>> {
+impl<'a> IoBlockDTO<'a> {
+    pub fn cfrom(item: &'a HttpPostHost, huuid: &'a str) -> Option<Vec<IoBlockDTO<'a>>> {
         let ioblocks = item.ioblocks.as_ref()?;
         let mut list = Vec::with_capacity(ioblocks.len());
         for iostat in ioblocks {
-            list.push(IoBlockDTO {
+            list.push(Self {
                 device_name: &iostat.device_name,
                 read_count: iostat.read_count,
                 read_bytes: iostat.read_bytes,
                 write_count: iostat.write_count,
                 write_bytes: iostat.write_bytes,
                 busy_time: iostat.busy_time,
-                host_uuid: &item.uuid,
+                host_uuid: huuid,
                 created_at: item.created_at,
             })
         }

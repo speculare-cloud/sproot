@@ -117,14 +117,14 @@ pub struct LoadAvgDTO<'a> {
     pub created_at: chrono::NaiveDateTime,
 }
 
-impl<'a> From<&'a HttpPostHost> for Option<LoadAvgDTO<'a>> {
-    fn from(item: &'a HttpPostHost) -> Option<LoadAvgDTO<'a>> {
+impl<'a> LoadAvgDTO<'a> {
+    pub fn cfrom(item: &'a HttpPostHost, huuid: &'a str) -> Option<LoadAvgDTO<'a>> {
         let load_avg = item.load_avg.as_ref()?;
-        Some(LoadAvgDTO {
+        Some(Self {
             one: load_avg.one,
             five: load_avg.five,
             fifteen: load_avg.fifteen,
-            host_uuid: &item.uuid,
+            host_uuid: huuid,
             created_at: item.created_at,
         })
     }

@@ -15,16 +15,15 @@ use crate::models::schema::{
     memory::dsl::*,
     swap::dsl::*,
 };
-use crate::models::{
-    CpuStatsDTO, CpuTimesDTO, DiskDTOList, HttpPostHost, IoBlockDTOList, IoNetDTOList, LoadAvgDTO,
-    MemoryDTO, SwapDTO,
-};
+use crate::models::{CpuStatsDTO, CpuTimesDTO, HttpPostHost, LoadAvgDTO, MemoryDTO, SwapDTO};
 
 use diesel::{dsl::any, *};
 use serde::{Deserialize, Serialize};
 
+use super::{DiskDTO, IoBlockDTO, IoNetDTO};
+
 /// DB Specific struct for hosts table
-#[derive(Identifiable, Queryable, Debug, Serialize, Deserialize, Insertable, AsChangeset)]
+#[derive(Identifiable, Queryable, Debug, Serialize, Deserialize, AsChangeset)]
 #[table_name = "hosts"]
 #[primary_key(uuid)]
 pub struct Host {
@@ -41,11 +40,11 @@ impl Host {
     /// # Params
     /// * `conn` - The r2d2 connection needed to fetch the data from the db
     /// * `items` - The Vec<HttpPostHost> we just got from the Post request (contains all our info)
-    pub fn insert(conn: &ConnType, items: &[HttpPostHost]) -> Result<(), AppError> {
+    pub fn insert(conn: &ConnType, items: &[HttpPostHost], huuid: &str) -> Result<(), AppError> {
         let len = items.len();
         // If there is only one item, it's faster to only insert one to avoid allocation of vector
         if len == 1 {
-            return Self::insert_one(conn, &items[0]);
+            return Self::insert_one(conn, &items[0], huuid);
         } else if len == 0 {
             return Ok(());
         }
@@ -57,40 +56,40 @@ impl Host {
         let mut v_nswap: Vec<SwapDTO> = Vec::with_capacity(len);
         // For these vector we can't predict the lenght of them, as a server/computer can have
         // a new net interfaces or disks at any time. So we create regular Vec that will grow if needed.
-        let mut v_ndisks: DiskDTOList = Vec::new();
-        let mut v_nioblocks: IoBlockDTOList = Vec::new();
-        let mut v_nionets: IoNetDTOList = Vec::new();
+        let mut v_ndisks: Vec<DiskDTO> = Vec::new();
+        let mut v_nioblocks: Vec<IoBlockDTO> = Vec::new();
+        let mut v_nionets: Vec<IoNetDTO> = Vec::new();
 
         for item in items {
             // Only insert Option if they are present to their Vector
-            if let Some(value_cpustats) = Option::<CpuStatsDTO>::from(item) {
+            if let Some(value_cpustats) = CpuStatsDTO::cfrom(item, huuid) {
                 v_ncpustats.push(value_cpustats);
             }
-            if let Some(value_cputimes) = Option::<CpuTimesDTO>::from(item) {
+            if let Some(value_cputimes) = CpuTimesDTO::cfrom(item, huuid) {
                 v_ncputimes.push(value_cputimes);
             }
-            if let Some(value_loadavg) = Option::<LoadAvgDTO>::from(item) {
+            if let Some(value_loadavg) = LoadAvgDTO::cfrom(item, huuid) {
                 v_nloadavg.push(value_loadavg);
             }
-            if let Some(value_memory) = Option::<MemoryDTO>::from(item) {
+            if let Some(value_memory) = MemoryDTO::cfrom(item, huuid) {
                 v_nmemory.push(value_memory);
             }
-            if let Some(value_swap) = Option::<SwapDTO>::from(item) {
+            if let Some(value_swap) = SwapDTO::cfrom(item, huuid) {
                 v_nswap.push(value_swap);
             }
-            if let Some(value_disks) = Option::<DiskDTOList>::from(item).as_mut() {
+            if let Some(value_disks) = DiskDTO::cfrom(item, huuid).as_mut() {
                 v_ndisks.append(value_disks);
             }
-            if let Some(value_iostats) = Option::<IoBlockDTOList>::from(item).as_mut() {
+            if let Some(value_iostats) = IoBlockDTO::cfrom(item, huuid).as_mut() {
                 v_nioblocks.append(value_iostats);
             }
-            if let Some(value_iocounters) = Option::<IoNetDTOList>::from(item).as_mut() {
+            if let Some(value_iocounters) = IoNetDTO::cfrom(item, huuid).as_mut() {
                 v_nionets.append(value_iocounters);
             }
 
             // Insert Host data, if conflict, only update uptime
             insert_into(hosts)
-                .values(&Host::from(item))
+                .values(HostDTO::cfrom(item, huuid))
                 .on_conflict(uuid)
                 .do_update()
                 .set(uptime.eq(item.uptime))
@@ -113,37 +112,37 @@ impl Host {
     /// # Params
     /// * `conn` - The r2d2 connection needed to fetch the data from the db
     /// * `item` - The Vec<HttpPostHost>[0] we just got from the Post request (contains all our info)
-    pub fn insert_one(conn: &ConnType, item: &HttpPostHost) -> Result<(), AppError> {
+    pub fn insert_one(conn: &ConnType, item: &HttpPostHost, huuid: &str) -> Result<(), AppError> {
         // Insert Host data, if conflict, only update uptime
         insert_into(hosts)
-            .values(&Host::from(item))
+            .values(HostDTO::cfrom(item, huuid))
             .on_conflict(uuid)
             .do_update()
             .set(uptime.eq(item.uptime))
             .execute(conn)?;
         // Only insert Option if they are present
-        if let Some(value) = Option::<CpuStatsDTO>::from(item) {
+        if let Some(value) = CpuStatsDTO::cfrom(item, huuid) {
             insert_into(cpustats).values(&value).execute(conn)?;
         }
-        if let Some(value) = Option::<CpuTimesDTO>::from(item) {
+        if let Some(value) = CpuTimesDTO::cfrom(item, huuid) {
             insert_into(cputimes).values(&value).execute(conn)?;
         }
-        if let Some(value) = Option::<LoadAvgDTO>::from(item) {
+        if let Some(value) = LoadAvgDTO::cfrom(item, huuid) {
             insert_into(loadavg).values(&value).execute(conn)?;
         }
-        if let Some(value) = Option::<MemoryDTO>::from(item) {
+        if let Some(value) = MemoryDTO::cfrom(item, huuid) {
             insert_into(memory).values(&value).execute(conn)?;
         }
-        if let Some(value) = Option::<SwapDTO>::from(item) {
+        if let Some(value) = SwapDTO::cfrom(item, huuid) {
             insert_into(swap).values(&value).execute(conn)?;
         }
-        if let Some(value) = Option::<DiskDTOList>::from(item) {
+        if let Some(value) = DiskDTO::cfrom(item, huuid) {
             insert_into(disks).values(&value).execute(conn)?;
         }
-        if let Some(value) = Option::<IoBlockDTOList>::from(item) {
+        if let Some(value) = IoBlockDTO::cfrom(item, huuid) {
             insert_into(ioblocks).values(&value).execute(conn)?;
         }
-        if let Some(value) = Option::<IoNetDTOList>::from(item) {
+        if let Some(value) = IoNetDTO::cfrom(item, huuid) {
             insert_into(ionets).values(&value).execute(conn)?;
         }
         // If we reached this point, everything went well so return an empty Closure
@@ -172,14 +171,28 @@ impl Host {
     }
 }
 
-impl From<&HttpPostHost> for Host {
-    fn from(item: &HttpPostHost) -> Host {
-        Host {
-            system: item.system.to_owned(),
-            os_version: item.os_version.to_owned(),
-            hostname: item.hostname.to_string(),
+// ================
+// Insertable model
+// ================
+#[derive(Insertable)]
+#[table_name = "hosts"]
+pub struct HostDTO<'a> {
+    pub system: &'a str,
+    pub os_version: &'a str,
+    pub hostname: &'a str,
+    pub uptime: i64,
+    pub uuid: &'a str,
+    pub created_at: chrono::NaiveDateTime,
+}
+
+impl<'a> HostDTO<'a> {
+    pub fn cfrom(item: &'a HttpPostHost, huuid: &'a str) -> Self {
+        Self {
+            system: &item.system,
+            os_version: &item.os_version,
+            hostname: &item.hostname,
             uptime: item.uptime,
-            uuid: item.uuid.to_string(),
+            uuid: huuid,
             created_at: item.created_at,
         }
     }

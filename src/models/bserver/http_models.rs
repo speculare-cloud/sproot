@@ -81,7 +81,6 @@ pub struct HttpIoNet {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct HttpPostHost {
-    pub uuid: String,
     pub system: String,
     pub os_version: String,
     pub hostname: String,

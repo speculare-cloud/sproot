@@ -146,10 +146,10 @@ pub struct CpuTimesDTO<'a> {
     pub created_at: chrono::NaiveDateTime,
 }
 
-impl<'a> From<&'a HttpPostHost> for Option<CpuTimesDTO<'a>> {
-    fn from(item: &'a HttpPostHost) -> Option<CpuTimesDTO<'a>> {
+impl<'a> CpuTimesDTO<'a> {
+    pub fn cfrom(item: &'a HttpPostHost, huuid: &'a str) -> Option<CpuTimesDTO<'a>> {
         let cputimes = item.cpu_times.as_ref()?;
-        Some(CpuTimesDTO {
+        Some(Self {
             cuser: cputimes.user,
             nice: cputimes.nice,
             system: cputimes.system,
@@ -160,7 +160,7 @@ impl<'a> From<&'a HttpPostHost> for Option<CpuTimesDTO<'a>> {
             steal: cputimes.steal,
             guest: cputimes.guest,
             guest_nice: cputimes.guest_nice,
-            host_uuid: &item.uuid,
+            host_uuid: huuid,
             created_at: item.created_at,
         })
     }
