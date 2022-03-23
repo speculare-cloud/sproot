@@ -12,6 +12,7 @@ actix-session = { version = "0.6", features = ["cookie-session"] }
 chrono = { version = "0.4", features = ["serde"] }
 diesel = { version = "1.4", features = ["postgres", "r2d2", "chrono", "uuidv07"] }
 env_logger = "0.9"
+futures-util = "0.3"
 jsonwebtoken = "8.0"
 log = "0.4"
 r2d2 = "0.8"

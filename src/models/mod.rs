@@ -1,3 +1,8 @@
+use crate::Pool;
+
+use serde::{Deserialize, Serialize};
+use uuid::Uuid;
+
 mod balerts;
 mod bauth;
 mod bserver;
@@ -6,6 +11,27 @@ pub mod schema;
 pub use balerts::*;
 pub use bauth::*;
 pub use bserver::*;
+
+/// Used to hold the information for the database in Actix
+pub struct MetricsPool {
+    pub pool: Pool,
+}
+
+pub struct AuthPool {
+    pub pool: Pool,
+}
+
+/// Represent the host_uuid for Actix extractor
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Specific {
+    pub uuid: String,
+}
+
+/// Dummy used to represent the user in Actix's extensions
+#[derive(Clone, Debug)]
+pub struct InnerUser {
+    pub uuid: Uuid,
+}
 
 /// granularity == the range in which we'll group the data
 /// We'll compute the granularity from this equation:
