@@ -9,6 +9,10 @@ extern crate diesel;
 pub mod errors;
 pub mod models;
 
+use crate::errors::AppError;
+
+use actix_session::storage::CookieSessionStore;
+use actix_session::{CookieContentSecurity, SessionMiddleware};
 use diesel::{prelude::PgConnection, r2d2::ConnectionManager};
 use rustls::{Certificate, PrivateKey, ServerConfig};
 use std::fs::File;
@@ -24,14 +28,14 @@ pub type ConnType = r2d2::PooledConnection<ConnectionManager<PgConnection>>;
 macro_rules! field_isset {
     ($value:expr, $name:literal) => {
         match $value {
-            Some(x) => x,
-            None => {
-                error!(
+            Some(x) => Ok(x),
+            None => Err(AppError {
+                message: format!(
                     "Config: optional field {} is not defined but is needed.",
                     $name
-                );
-                std::process::exit(1);
-            }
+                ),
+                error_type: sproot::errors::AppErrorType::ServerError,
+            }),
         }
     };
 }
@@ -46,6 +50,9 @@ macro_rules! as_variant {
     };
 }
 
+/// Simple function returning the name of the binary
+///
+/// Use to filter the logs.
 pub fn prog() -> Option<String> {
     std::env::args()
         .next()
@@ -56,40 +63,47 @@ pub fn prog() -> Option<String> {
         .map(String::from)
 }
 
-/// Return the ServerConfig needed for Actix to be binded on HTTPS
+/// Return the ServerConfig needed for Actix to be bind on HTTPS
 ///
 /// Use key and cert for the path to find the files.
-pub fn get_ssl_builder(key: &str, cert: &str) -> ServerConfig {
-    // Open BufReader on the key and cert files to read their content
-    let cert_file = &mut BufReader::new(
-        File::open(cert).unwrap_or_else(|_| panic!("Certificate file not found at {}", cert)),
-    );
-    let key_file = &mut BufReader::new(
-        File::open(key).unwrap_or_else(|_| panic!("Key file not found at {}", key)),
-    );
+pub fn get_ssl_builder(key: &str, cert: &str) -> Result<ServerConfig, AppError> {
+    let key_file = &mut BufReader::new(File::open(key)?);
+    // Extract all PKCS8-encoded private key from key_file and generate a Vec from them
+    let mut keys = rustls_pemfile::pkcs8_private_keys(key_file)?;
+    // If no keys are found, we try using the rsa type
+    if keys.is_empty() {
+        // Reopen a new BufReader as pkcs8_private_keys took over the previous one
+        let key_file = &mut BufReader::new(File::open(&key)?);
+        keys = rustls_pemfile::rsa_private_keys(key_file)?;
+    }
+    // Convert the first key to be a PrivateKey
+    let key: PrivateKey = PrivateKey(keys.remove(0));
+
+    let cert_file = &mut BufReader::new(File::open(cert)?);
     // Create a Vec of certificate by extracting all cert from cert_file
     let cert_chain = rustls_pemfile::certs(cert_file)
         .unwrap()
         .iter()
         .map(|v| Certificate(v.clone()))
         .collect();
-    // Extract all PKCS8-encoded private key from key_file and generate a Vec from them
-    let mut keys = rustls_pemfile::pkcs8_private_keys(key_file).unwrap();
-    // If no keys are found, we try using the rsa type
-    if keys.is_empty() {
-        // Reopen a new BufReader as pkcs8_private_keys took over the previous one
-        let key_file = &mut BufReader::new(
-            File::open(&key).unwrap_or_else(|_| panic!("Key file not found at {}", key)),
-        );
-        keys = rustls_pemfile::rsa_private_keys(key_file).unwrap();
-    }
-    // Convert the first key to be a PrivateKey
-    let key: PrivateKey = PrivateKey(keys.remove(0));
 
     // Return the ServerConfig to be used
-    ServerConfig::builder()
+    Ok(ServerConfig::builder()
         .with_safe_defaults()
         .with_no_client_auth()
-        .with_single_cert(cert_chain, key)
-        .expect("bad certificate/key")
+        .with_single_cert(cert_chain, key)?)
+}
+
+/// Get the SessionMiddleware with configured Cookie settings
+pub fn get_session_middleware(
+    secret: &[u8],
+    cookie_name: String,
+) -> SessionMiddleware<CookieSessionStore> {
+    SessionMiddleware::builder(
+        CookieSessionStore::default(),
+        actix_web::cookie::Key::from(secret),
+    )
+    .cookie_name(cookie_name)
+    .cookie_content_security(CookieContentSecurity::Signed)
+    .build()
 }

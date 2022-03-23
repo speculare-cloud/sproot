@@ -5,6 +5,7 @@ use std::fmt;
 #[derive(Debug, PartialEq)]
 pub enum AppErrorType {
     ActixError,
+    AskamaError,
     DieselError,
     NotFound,
     PoolError,
@@ -18,6 +19,8 @@ pub enum AppErrorType {
     ExpiredJwtError,
     OtherJwtError,
     WalkDirError,
+    IoError,
+    RustTlsError,
 }
 
 #[derive(Debug)]
@@ -179,7 +182,7 @@ impl From<askama::Error> for AppError {
     fn from(error: askama::Error) -> AppError {
         AppError {
             message: format!("{:?}", error),
-            error_type: AppErrorType::ServerError,
+            error_type: AppErrorType::AskamaError,
         }
     }
 }
@@ -206,7 +209,7 @@ impl From<std::io::Error> for AppError {
     fn from(error: std::io::Error) -> AppError {
         AppError {
             message: format!("{:?}", error),
-            error_type: AppErrorType::WalkDirError,
+            error_type: AppErrorType::IoError,
         }
     }
 }
@@ -216,6 +219,15 @@ impl From<simd_json::Error> for AppError {
         AppError {
             message: format!("{:?}", error),
             error_type: AppErrorType::SerdeError,
+        }
+    }
+}
+
+impl From<rustls::Error> for AppError {
+    fn from(error: rustls::Error) -> AppError {
+        AppError {
+            message: format!("{:?}", error),
+            error_type: AppErrorType::RustTlsError,
         }
     }
 }
