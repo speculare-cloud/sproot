@@ -55,6 +55,7 @@ where
         let inner_user = match request.get_session().get::<String>("user_id") {
             Ok(Some(inner)) => inner,
             Ok(None) | Err(_) => {
+                debug!("CheckSessions: No user_id in the session");
                 let response = HttpResponse::BadRequest().finish().map_into_right_body();
                 return Box::pin(async { Ok(ServiceResponse::new(request, response)) });
             }
@@ -64,6 +65,7 @@ where
         let info = match web::Query::<Specific>::from_query(request.query_string()) {
             Ok(info) => info,
             Err(_) => {
+                debug!("CheckSessions: No Specific query found");
                 let response = HttpResponse::BadRequest().finish().map_into_right_body();
                 return Box::pin(async { Ok(ServiceResponse::new(request, response)) });
             }
