@@ -73,7 +73,7 @@ impl ApiKey {
 }
 
 /// Using a specific struct for the Update allow us to pass all as None expect the fields we want to update
-#[derive(AsChangeset, Deserialize, Serialize, Debug, Default)]
+#[derive(Insertable, AsChangeset, Deserialize, Serialize, Debug, Default)]
 #[table_name = "apikeys"]
 pub struct ApiKeyDTOUpdate {
     pub key: Option<String>,
@@ -83,12 +83,34 @@ pub struct ApiKeyDTOUpdate {
 }
 
 impl ApiKeyDTOUpdate {
+    /// Create a new key and return the number of row affected (1)
+    /// # Params
+    /// * `conn` - The r2d2 connection needed to fetch the data from the db
+    pub fn insert(&self, conn: &ConnType) -> Result<usize, AppError> {
+        Ok(insert_into(dsl_apikeys).values(self).execute(conn)?)
+    }
+
+    /// Return the newly created ApiKey
+    /// # Params
+    /// * `conn` - The r2d2 connection needed to fetch the data from the db
+    pub fn ginsert(&self, conn: &ConnType) -> Result<ApiKey, AppError> {
+        Ok(insert_into(dsl_apikeys).values(self).get_result(conn)?)
+    }
+
+    /// Update a specific ApiKey using the target_id and return the number of row affected (1)
+    /// # Params
+    /// * `conn` - The r2d2 connection needed to fetch the data from the db
+    /// * `target_id` - The targeted ApiKey to update
     pub fn update(&self, conn: &ConnType, target_id: i64) -> Result<usize, AppError> {
         Ok(update(dsl_apikeys.filter(id.eq(target_id)))
             .set(self)
             .execute(conn)?)
     }
 
+    /// Return the updated ApiKey
+    /// # Params
+    /// * `conn` - The r2d2 connection needed to fetch the data from the db
+    /// * `target_id` - The targeted ApiKey to update
     pub fn gupdate(&self, conn: &ConnType, target_id: i64) -> Result<ApiKey, AppError> {
         Ok(update(dsl_apikeys.filter(id.eq(target_id)))
             .set(self)
