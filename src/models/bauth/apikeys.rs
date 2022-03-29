@@ -62,6 +62,14 @@ impl ApiKey {
         // Remove None from the Vec
         Ok(res.into_iter().flatten().collect())
     }
+
+    /// Delete the specified key returning the number of row affected. (1 if found)
+    /// # Params
+    /// * `conn` - The r2d2 connection needed to fetch the data from the db
+    /// * `target_key` - The API key to delete
+    pub fn delete_key(conn: &ConnType, target_key: &str) -> Result<usize, AppError> {
+        Ok(delete(dsl_apikeys.filter(key.eq(target_key))).execute(conn)?)
+    }
 }
 
 /// Using a specific struct for the Update allow us to pass all as None expect the fields we want to update
