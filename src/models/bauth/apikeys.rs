@@ -75,14 +75,14 @@ impl ApiKey {
 /// Using a specific struct for the Update allow us to pass all as None expect the fields we want to update
 #[derive(Insertable, AsChangeset, Deserialize, Serialize, Debug, Default)]
 #[table_name = "apikeys"]
-pub struct ApiKeyDTOUpdate {
+pub struct ApiKeyDTO {
     pub key: Option<String>,
     pub host_uuid: Option<String>,
     pub customer_id: Option<Uuid>,
     pub berta: Option<String>,
 }
 
-impl ApiKeyDTOUpdate {
+impl ApiKeyDTO {
     /// Create a new key and return the number of row affected (1)
     /// # Params
     /// * `conn` - The r2d2 connection needed to fetch the data from the db
