@@ -4,6 +4,7 @@ use actix_session::SessionExt;
 use actix_web::body::EitherBody;
 use actix_web::dev::{self, ServiceRequest, ServiceResponse};
 use actix_web::dev::{Service, Transform};
+use actix_web::web::Data;
 use actix_web::{web, Error, HttpMessage, HttpResponse};
 use futures_util::future::LocalBoxFuture;
 use std::{
@@ -72,7 +73,7 @@ where
         };
 
         // Get the AuthPool from the server
-        let auth = match request.app_data::<AuthPool>() {
+        let auth = match request.app_data::<Data<AuthPool>>() {
             Some(auth) => auth,
             None => {
                 error!("middleware: auth is not configured correctly");
