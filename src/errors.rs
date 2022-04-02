@@ -1,4 +1,5 @@
 use actix_web::{http::StatusCode, HttpResponse};
+use diesel::result::DatabaseErrorKind;
 use serde::Serialize;
 use std::fmt;
 
@@ -8,6 +9,7 @@ pub enum AppErrorType {
     AskamaError,
     DieselError,
     NotFound,
+    AlreadyExists,
     PoolError,
     InvalidRequest,
     InvalidToken,
@@ -59,6 +61,10 @@ impl AppError {
                 error_type: AppErrorType::ServerError,
                 ..
             } => "Server error, try again later".to_owned(),
+            AppError {
+                error_type: AppErrorType::AlreadyExists,
+                ..
+            } => "The resource you tried to create already exists".to_owned(),
             AppError { message, .. } => message.to_owned(),
         }
     }
@@ -79,9 +85,10 @@ struct ErrorResponse {
 impl actix_web::error::ResponseError for AppError {
     fn status_code(&self) -> StatusCode {
         match self.error_type {
-            AppErrorType::InvalidRequest | AppErrorType::UUIDError | AppErrorType::SerdeError => {
-                StatusCode::BAD_REQUEST
-            }
+            AppErrorType::InvalidRequest
+            | AppErrorType::UUIDError
+            | AppErrorType::SerdeError
+            | AppErrorType::AlreadyExists => StatusCode::BAD_REQUEST,
             AppErrorType::InvalidToken
             | AppErrorType::ExpiredJwtError
             | AppErrorType::InvalidJwtError => StatusCode::UNAUTHORIZED,
@@ -122,6 +129,9 @@ impl From<diesel::result::Error> for AppError {
     fn from(error: diesel::result::Error) -> AppError {
         let error_type = match error {
             diesel::result::Error::NotFound => AppErrorType::NotFound,
+            diesel::result::Error::DatabaseError(DatabaseErrorKind::UniqueViolation, _) => {
+                AppErrorType::AlreadyExists
+            }
             _ => AppErrorType::DieselError,
         };
 
