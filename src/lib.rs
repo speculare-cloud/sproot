@@ -6,7 +6,6 @@ extern crate log;
 #[macro_use]
 extern crate diesel;
 
-pub mod check_sessions;
 pub mod errors;
 pub mod models;
 
