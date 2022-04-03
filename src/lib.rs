@@ -98,11 +98,13 @@ pub fn get_ssl_builder(key: &str, cert: &str) -> Result<ServerConfig, AppError> 
 pub fn get_session_middleware(
     secret: &[u8],
     cookie_name: String,
+    cookie_domain: Option<String>,
 ) -> SessionMiddleware<CookieSessionStore> {
     SessionMiddleware::builder(
         CookieSessionStore::default(),
         actix_web::cookie::Key::from(secret),
     )
+    .cookie_domain(cookie_domain)
     .cookie_name(cookie_name)
     .cookie_content_security(CookieContentSecurity::Signed)
     .build()
