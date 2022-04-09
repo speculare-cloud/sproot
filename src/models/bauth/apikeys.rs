@@ -20,6 +20,14 @@ pub struct ApiKey {
 }
 
 impl ApiKey {
+    /// Return a Vec of ApiKeys
+    /// # Params
+    /// * `conn` - The r2d2 connection needed to fetch the data from the db
+    /// * `cid` - The customer ID
+    pub fn get_keys(conn: &ConnType, cid: &Uuid) -> Result<Vec<Self>, AppError> {
+        Ok(dsl_apikeys.filter(customer_id.eq(cid)).get_results(conn)?)
+    }
+
     /// Return a potential ApiKey
     /// # Params
     /// * `conn` - The r2d2 connection needed to fetch the data from the db
