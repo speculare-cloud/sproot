@@ -50,6 +50,20 @@ impl ApiKey {
         Ok(res.is_some())
     }
 
+    /// Check if the cid (user) owns the key
+    /// # Params
+    /// * `conn` - The r2d2 connection needed to fetch the data from the db
+    /// * `cid` - The customer ID
+    /// * `ckey` - The API key
+    pub fn own_key(conn: &ConnType, cid: &Uuid, ckey: &str) -> Result<bool, AppError> {
+        let res: Option<Self> = dsl_apikeys
+            .filter(customer_id.eq(cid).and(key.eq(ckey)))
+            .first(conn)
+            .optional()?;
+
+        Ok(res.is_some())
+    }
+
     /// Get a list of Some(host_uuid) owned by the customer
     /// # Params
     /// * `conn` - The r2d2 connection needed to fetch the data from the db
