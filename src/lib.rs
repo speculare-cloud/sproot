@@ -104,6 +104,9 @@ pub fn get_session_middleware(
         CookieSessionStore::default(),
         actix_web::cookie::Key::from(secret),
     )
+    .session_length(actix_session::SessionLength::Predetermined {
+        max_session_length: Some(actix_web::cookie::time::Duration::WEEK),
+    })
     .cookie_domain(cookie_domain)
     .cookie_name(cookie_name)
     .cookie_content_security(CookieContentSecurity::Signed)
