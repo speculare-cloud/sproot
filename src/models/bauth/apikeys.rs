@@ -28,6 +28,17 @@ impl ApiKey {
         Ok(dsl_apikeys.filter(customer_id.eq(cid)).get_results(conn)?)
     }
 
+    /// Return a Vec of ApiKeys
+    /// # Params
+    /// * `conn` - The r2d2 connection needed to fetch the data from the db
+    /// * `cid` - The customer ID
+    /// * `hkey` - The apiKey, will be used for lookup
+    pub fn get_key_owned(conn: &ConnType, cid: &Uuid, hkey: &str) -> Result<Self, AppError> {
+        Ok(dsl_apikeys
+            .filter(customer_id.eq(cid).and(key.eq(hkey)))
+            .first(conn)?)
+    }
+
     /// Return a potential ApiKey
     /// # Params
     /// * `conn` - The r2d2 connection needed to fetch the data from the db
