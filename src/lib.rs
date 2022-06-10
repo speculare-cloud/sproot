@@ -95,6 +95,10 @@ pub fn get_ssl_builder(key: &str, cert: &str) -> Result<ServerConfig, AppError> 
 }
 
 /// Get the SessionMiddleware with configured Cookie settings
+///
+/// The hard-coded default session-length is 12 weeks (+/- 3 months).
+/// The content of the cookie (session) is not crypted and is simply
+/// signed. So do not store any confidential information in it.
 pub fn get_session_middleware(
     secret: &[u8],
     cookie_name: String,
@@ -105,7 +109,7 @@ pub fn get_session_middleware(
         actix_web::cookie::Key::from(secret),
     )
     .session_length(actix_session::SessionLength::Predetermined {
-        max_session_length: Some(actix_web::cookie::time::Duration::WEEK),
+        max_session_length: Some(actix_web::cookie::time::Duration::weeks(12)),
     })
     .cookie_domain(cookie_domain)
     .cookie_name(cookie_name)
