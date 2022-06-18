@@ -79,7 +79,7 @@ impl ApiKey {
     /// # Params
     /// * `conn` - The r2d2 connection needed to fetch the data from the db
     /// * `cid` - The customer ID
-    pub fn get_host_by_owned(
+    pub fn get_hosts_by_owned(
         conn: &ConnType,
         cid: &Uuid,
         size: i64,

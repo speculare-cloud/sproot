@@ -40,6 +40,7 @@ impl Host {
     /// # Params
     /// * `conn` - The r2d2 connection needed to fetch the data from the db
     /// * `items` - The Vec<HttpPostHost> we just got from the Post request (contains all our info)
+    /// * `huuid` - The UUID of the host
     pub fn insert(conn: &ConnType, items: &[HttpPostHost], huuid: &str) -> Result<(), AppError> {
         let len = items.len();
         // If there is only one item, it's faster to only insert one to avoid allocation of vector
@@ -166,8 +167,16 @@ impl Host {
     /// # Params
     /// * `conn` - The r2d2 connection needed to fetch the data from the db
     /// * `hosts_uuid` - The uuids of the hosts you want to get info
-    pub fn get_from_uuid(conn: &ConnType, hosts_uuid: &[String]) -> Result<Vec<Self>, AppError> {
+    pub fn get_from_uuids(conn: &ConnType, hosts_uuid: &[String]) -> Result<Vec<Self>, AppError> {
         Ok(dsl_host.filter(uuid.eq(any(hosts_uuid))).load(conn)?)
+    }
+
+    /// Return a Host from his UUID
+    /// # Params
+    /// * `conn` - The r2d2 connection needed to fetch the data from the db
+    /// * `huuid` - The uuids of the hosts you want to get info
+    pub fn get_from_uuid(conn: &ConnType, huuid: &str) -> Result<Self, AppError> {
+        Ok(dsl_host.filter(uuid.eq(huuid)).first(conn)?)
     }
 }
 
