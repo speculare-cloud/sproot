@@ -12,7 +12,7 @@ impl Incidents {
     /// Return a Vector of Incidents for a specific host
     /// # Params
     /// * `conn` - The r2d2 connection needed to fetch the data from the db
-    /// * `uuid` - The host's uuid we want to get incidents of, this field is optional
+    /// * `uuid` - The host's uuid we want to get incidents of
     /// * `size` - The number of elements to fetch
     /// * `page` - How many items you want to skip (page * size)
     pub fn get_list_host(
@@ -47,6 +47,19 @@ impl Incidents {
     /// * `target_id` - The id of the incident to delete
     pub fn delete(conn: &mut ConnType, target_id: i32) -> Result<usize, AppError> {
         Ok(delete(dsl_incidents.filter(id.eq(target_id))).execute(conn)?)
+    }
+
+    /// Return the numbers of Incidents within a size limit
+    /// # Params
+    /// * `conn` - The r2d2 connection needed to fetch the data from the db
+    /// * `uuid` - The host's uuid we want to get incidents of
+    /// * `size` - The number of elements to fetch
+    pub fn count(conn: &mut ConnType, uuid: &str, size: i64) -> Result<i64, AppError> {
+        Ok(dsl_incidents
+            .filter(host_uuid.eq(uuid))
+            .limit(size)
+            .count()
+            .get_result(conn)?)
     }
 }
 
