@@ -23,6 +23,7 @@ pub enum AppErrorType {
     WalkDirError,
     IoError,
     RustTlsError,
+    OtherError,
 }
 
 #[derive(Debug)]
@@ -35,7 +36,7 @@ impl AppError {
     pub fn new(message: String) -> Self {
         Self {
             message,
-            error_type: AppErrorType::ServerError,
+            error_type: AppErrorType::OtherError,
         }
     }
 
