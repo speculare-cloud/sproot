@@ -87,6 +87,10 @@ impl AlertsConfig {
     pub fn from_configs_path(path: &str) -> Result<Vec<AlertsConfig>, AppError> {
         let mut alerts: Vec<AlertsConfig> = Vec::new();
 
+        if std::fs::metadata(path).is_err() {
+            return Err(AppError::new("error: alerts_path: not found".to_owned()));
+        }
+
         for entry in WalkDir::new(&path).min_depth(1).max_depth(2) {
             // Detect if the WalkDir failed to read the folder (permissions/...)
             let entry = entry?;
