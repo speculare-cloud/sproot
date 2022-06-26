@@ -1,6 +1,6 @@
 use super::{Memory, MemoryDTO, MemoryDTORaw};
 
-use crate::errors::AppError;
+use crate::apierrors::ApiError;
 use crate::models::schema::memory::dsl::{created_at, host_uuid, memory as dsl_memory};
 use crate::models::{get_granularity, HttpPostHost};
 use crate::ConnType;
@@ -22,7 +22,7 @@ impl Memory {
         uuid: &str,
         size: i64,
         page: i64,
-    ) -> Result<Vec<Self>, AppError> {
+    ) -> Result<Vec<Self>, ApiError> {
         Ok(dsl_memory
             .filter(host_uuid.eq(uuid))
             .limit(size)
@@ -43,7 +43,7 @@ impl Memory {
         uuid: &str,
         min_date: chrono::NaiveDateTime,
         max_date: chrono::NaiveDateTime,
-    ) -> Result<Vec<MemoryDTORaw>, AppError> {
+    ) -> Result<Vec<MemoryDTORaw>, ApiError> {
         let size = (max_date - min_date).num_seconds();
         let granularity = get_granularity(size);
 

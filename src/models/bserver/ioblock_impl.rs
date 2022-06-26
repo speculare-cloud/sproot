@@ -1,6 +1,6 @@
 use super::{IoBlock, IoBlockCount, IoBlockDTO, IoBlockDTORaw};
 
-use crate::errors::AppError;
+use crate::apierrors::ApiError;
 use crate::models::schema::ioblocks::dsl::{created_at, host_uuid, ioblocks as dsl_ioblocks};
 use crate::models::{get_granularity, HttpPostHost};
 use crate::ConnType;
@@ -22,7 +22,7 @@ impl IoBlock {
         uuid: &str,
         size: i64,
         page: i64,
-    ) -> Result<Vec<Self>, AppError> {
+    ) -> Result<Vec<Self>, ApiError> {
         Ok(dsl_ioblocks
             .filter(host_uuid.eq(uuid))
             .limit(size)
@@ -43,7 +43,7 @@ impl IoBlock {
         uuid: &str,
         min_date: chrono::NaiveDateTime,
         max_date: chrono::NaiveDateTime,
-    ) -> Result<Vec<IoBlockDTORaw>, AppError> {
+    ) -> Result<Vec<IoBlockDTORaw>, ApiError> {
         let size = (max_date - min_date).num_seconds();
         let granularity = get_granularity(size);
 
@@ -86,7 +86,7 @@ impl IoBlock {
     /// * `conn` - The r2d2 connection needed to fetch the data from the db
     /// * `uuid` - The host's uuid we want to get the number of ioblocks of
     /// * `size` - The number of elements to fetch
-    pub fn count(conn: &mut ConnType, uuid: &str, size: i64) -> Result<i64, AppError> {
+    pub fn count(conn: &mut ConnType, uuid: &str, size: i64) -> Result<i64, ApiError> {
         // Dummy require to ensure no issue if table name change.
         // If the table's name is to be changed, we have to change it from the sql_query below.
         {

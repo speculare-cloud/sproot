@@ -1,6 +1,6 @@
 use super::{Swap, SwapDTO, SwapDTORaw};
 
-use crate::errors::AppError;
+use crate::apierrors::ApiError;
 use crate::models::schema::swap::dsl::{created_at, host_uuid, swap as dsl_swap};
 use crate::models::{get_granularity, HttpPostHost};
 use crate::ConnType;
@@ -22,7 +22,7 @@ impl Swap {
         uuid: &str,
         size: i64,
         page: i64,
-    ) -> Result<Vec<Self>, AppError> {
+    ) -> Result<Vec<Self>, ApiError> {
         Ok(dsl_swap
             .filter(host_uuid.eq(uuid))
             .limit(size)
@@ -43,7 +43,7 @@ impl Swap {
         uuid: &str,
         min_date: chrono::NaiveDateTime,
         max_date: chrono::NaiveDateTime,
-    ) -> Result<Vec<SwapDTORaw>, AppError> {
+    ) -> Result<Vec<SwapDTORaw>, ApiError> {
         let size = (max_date - min_date).num_seconds();
         let granularity = get_granularity(size);
 

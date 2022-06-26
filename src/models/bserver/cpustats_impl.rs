@@ -1,6 +1,6 @@
 use super::{CpuStats, CpuStatsDTO, CpuStatsDTORaw};
 
-use crate::errors::AppError;
+use crate::apierrors::ApiError;
 use crate::models::schema::cpustats::dsl::{cpustats as dsl_cpustats, created_at, host_uuid};
 use crate::models::{get_granularity, HttpPostHost};
 use crate::ConnType;
@@ -22,7 +22,7 @@ impl CpuStats {
         uuid: &str,
         size: i64,
         page: i64,
-    ) -> Result<Vec<Self>, AppError> {
+    ) -> Result<Vec<Self>, ApiError> {
         Ok(dsl_cpustats
             .filter(host_uuid.eq(uuid))
             .limit(size)
@@ -43,7 +43,7 @@ impl CpuStats {
         uuid: &str,
         min_date: chrono::NaiveDateTime,
         max_date: chrono::NaiveDateTime,
-    ) -> Result<Vec<CpuStatsDTORaw>, AppError> {
+    ) -> Result<Vec<CpuStatsDTORaw>, ApiError> {
         let size = (max_date - min_date).num_seconds();
         let granularity = get_granularity(size);
 

@@ -1,6 +1,6 @@
 use super::{LoadAvg, LoadAvgDTO, LoadAvgDTORaw};
 
-use crate::errors::AppError;
+use crate::apierrors::ApiError;
 use crate::models::schema::loadavg::dsl::{created_at, host_uuid, loadavg as dsl_loadavg};
 use crate::models::{get_granularity, HttpPostHost};
 use crate::ConnType;
@@ -22,7 +22,7 @@ impl LoadAvg {
         uuid: &str,
         size: i64,
         page: i64,
-    ) -> Result<Vec<Self>, AppError> {
+    ) -> Result<Vec<Self>, ApiError> {
         Ok(dsl_loadavg
             .filter(host_uuid.eq(uuid))
             .limit(size)
@@ -43,7 +43,7 @@ impl LoadAvg {
         uuid: &str,
         min_date: chrono::NaiveDateTime,
         max_date: chrono::NaiveDateTime,
-    ) -> Result<Vec<LoadAvgDTORaw>, AppError> {
+    ) -> Result<Vec<LoadAvgDTORaw>, ApiError> {
         let size = (max_date - min_date).num_seconds();
         let granularity = get_granularity(size);
 

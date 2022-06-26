@@ -1,6 +1,6 @@
 use super::{Customers, CustomersDTO};
 
-use crate::errors::AppError;
+use crate::apierrors::ApiError;
 use crate::models::schema::customers::dsl::{customers as dsl_customers, email, id};
 use crate::ConnType;
 
@@ -12,7 +12,7 @@ impl Customers {
     /// # Params
     /// * `conn` - The r2d2 connection needed to fetch the data from the db
     /// * `mail` - The email address of the customer
-    pub fn get(conn: &mut ConnType, mail: &str) -> Result<Self, AppError> {
+    pub fn get(conn: &mut ConnType, mail: &str) -> Result<Self, ApiError> {
         Ok(dsl_customers.filter(email.eq(mail)).first(conn)?)
     }
 
@@ -20,7 +20,7 @@ impl Customers {
     /// # Params
     /// * `conn` - The r2d2 connection needed to fetch the data from the db
     /// * `cid` - The UUID of the customer
-    pub fn exists(conn: &mut ConnType, cid: &Uuid) -> Result<bool, AppError> {
+    pub fn exists(conn: &mut ConnType, cid: &Uuid) -> Result<bool, ApiError> {
         let res: Option<Self> = dsl_customers.filter(id.eq(cid)).first(conn).optional()?;
 
         Ok(res.is_some())
@@ -31,14 +31,14 @@ impl<'a> CustomersDTO<'a> {
     /// Create a new customer and return the number of row affected (1)
     /// # Params
     /// * `conn` - The r2d2 connection needed to fetch the data from the db
-    pub fn insert(&self, conn: &mut ConnType) -> Result<usize, AppError> {
+    pub fn insert(&self, conn: &mut ConnType) -> Result<usize, ApiError> {
         Ok(insert_into(dsl_customers).values(self).execute(conn)?)
     }
 
     /// Return the newly created customer
     /// # Params
     /// * `conn` - The r2d2 connection needed to fetch the data from the db
-    pub fn ginsert(&self, conn: &mut ConnType) -> Result<Customers, AppError> {
+    pub fn ginsert(&self, conn: &mut ConnType) -> Result<Customers, ApiError> {
         Ok(insert_into(dsl_customers).values(self).get_result(conn)?)
     }
 }

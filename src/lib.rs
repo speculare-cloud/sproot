@@ -6,10 +6,10 @@ extern crate log;
 #[macro_use]
 extern crate diesel;
 
-pub mod errors;
+pub mod apierrors;
 pub mod models;
 
-use crate::errors::AppError;
+use crate::apierrors::ApiError;
 
 use actix_session::storage::CookieSessionStore;
 use actix_session::{CookieContentSecurity, SessionMiddleware};
@@ -29,13 +29,9 @@ macro_rules! field_isset {
     ($value:expr, $name:literal) => {
         match $value {
             Some(x) => Ok(x),
-            None => Err(AppError {
-                message: format!(
-                    "Config: optional field {} is not defined but is needed.",
-                    $name
-                ),
-                error_type: sproot::errors::AppErrorType::ServerError,
-            }),
+            None => Err(ApiError::ServerError(String::from(
+                "config: optional field {} is not defined but is needed.",
+            ))),
         }
     };
 }
@@ -66,7 +62,7 @@ pub fn prog() -> Option<String> {
 /// Return the ServerConfig needed for Actix to be bind on HTTPS
 ///
 /// Use key and cert for the path to find the files.
-pub fn get_ssl_builder(key: &str, cert: &str) -> Result<ServerConfig, AppError> {
+pub fn get_ssl_builder(key: &str, cert: &str) -> Result<ServerConfig, ApiError> {
     let key_file = &mut BufReader::new(File::open(key)?);
     // Extract all PKCS8-encoded private key from key_file and generate a Vec from them
     let mut keys = rustls_pemfile::pkcs8_private_keys(key_file)?;

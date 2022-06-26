@@ -1,6 +1,6 @@
 use super::{IoNet, IoNetCount, IoNetDTO, IoNetDTORaw};
 
-use crate::errors::AppError;
+use crate::apierrors::ApiError;
 use crate::models::schema::ionets::dsl::{created_at, host_uuid, ionets as dsl_ionets};
 use crate::models::{get_granularity, HttpPostHost};
 use crate::ConnType;
@@ -22,7 +22,7 @@ impl IoNet {
         uuid: &str,
         size: i64,
         page: i64,
-    ) -> Result<Vec<Self>, AppError> {
+    ) -> Result<Vec<Self>, ApiError> {
         Ok(dsl_ionets
             .filter(host_uuid.eq(uuid))
             .limit(size)
@@ -43,7 +43,7 @@ impl IoNet {
         uuid: &str,
         min_date: chrono::NaiveDateTime,
         max_date: chrono::NaiveDateTime,
-    ) -> Result<Vec<IoNetDTORaw>, AppError> {
+    ) -> Result<Vec<IoNetDTORaw>, ApiError> {
         let size = (max_date - min_date).num_seconds();
         let granularity = get_granularity(size);
 
@@ -86,7 +86,7 @@ impl IoNet {
     /// * `conn` - The r2d2 connection needed to fetch the data from the db
     /// * `uuid` - The host's uuid we want to get the number of IoNet of
     /// * `size` - The number of elements to fetch
-    pub fn count(conn: &mut ConnType, uuid: &str, size: i64) -> Result<i64, AppError> {
+    pub fn count(conn: &mut ConnType, uuid: &str, size: i64) -> Result<i64, ApiError> {
         // Dummy require to ensure no issue if table name change.
         // If the table's name is to be changed, we have to change it from the sql_query below.
         {

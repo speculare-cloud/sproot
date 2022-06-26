@@ -3,7 +3,7 @@ use super::{
     LoadAvgDTO, MemoryDTO, SwapDTO,
 };
 
-use crate::errors::AppError;
+use crate::apierrors::ApiError;
 use crate::models::schema::{
     cpustats::dsl::*,
     cputimes::dsl::*,
@@ -29,7 +29,7 @@ impl Host {
         conn: &mut ConnType,
         items: &[HttpPostHost],
         huuid: &str,
-    ) -> Result<(), AppError> {
+    ) -> Result<(), ApiError> {
         let len = items.len();
         // If there is only one item, it's faster to only insert one to avoid allocation of vector
         if len == 1 {
@@ -105,7 +105,7 @@ impl Host {
         conn: &mut ConnType,
         item: &HttpPostHost,
         huuid: &str,
-    ) -> Result<(), AppError> {
+    ) -> Result<(), ApiError> {
         // Insert Host data, if conflict, only update uptime
         insert_into(hosts)
             .values(HostDTO::cfrom(item, huuid))
@@ -147,7 +147,7 @@ impl Host {
     /// * `conn` - The r2d2 connection needed to fetch the data from the db
     /// * `size` - The number of elements to fetch
     /// * `page` - How many items you want to skip (page * size)
-    pub fn list_hosts(conn: &mut ConnType, size: i64, page: i64) -> Result<Vec<Self>, AppError> {
+    pub fn list_hosts(conn: &mut ConnType, size: i64, page: i64) -> Result<Vec<Self>, ApiError> {
         Ok(dsl_host
             .limit(size)
             .offset(page * size)
@@ -162,7 +162,7 @@ impl Host {
     pub fn get_from_uuids(
         conn: &mut ConnType,
         hosts_uuid: &[String],
-    ) -> Result<Vec<Self>, AppError> {
+    ) -> Result<Vec<Self>, ApiError> {
         Ok(dsl_host.filter(uuid.eq_any(hosts_uuid)).load(conn)?)
     }
 
@@ -170,7 +170,7 @@ impl Host {
     /// # Params
     /// * `conn` - The r2d2 connection needed to fetch the data from the db
     /// * `huuid` - The uuids of the hosts you want to get info
-    pub fn get_from_uuid(conn: &mut ConnType, huuid: &str) -> Result<Self, AppError> {
+    pub fn get_from_uuid(conn: &mut ConnType, huuid: &str) -> Result<Self, ApiError> {
         Ok(dsl_host.filter(uuid.eq(huuid)).first(conn)?)
     }
 }
