@@ -33,7 +33,7 @@ pub enum ApiError {
     #[error("server error: `{0}`")]
     ServerError(String),
 
-    #[error("server error: `{0}`")]
+    #[error("resource not found: `{0}`")]
     NotFoundError(String),
 
     #[error("authorization error: `{0}`")]
@@ -58,7 +58,7 @@ impl From<ApiError> for actix_web::error::Error {
             ApiError::InvalidRequestError(_) | ApiError::SerdeError(_) | ApiError::SimdError(_) => {
                 actix_web::error::ErrorBadRequest(err)
             }
-            ApiError::DieselError(diesel::result::Error::NotFound) => {
+            ApiError::DieselError(diesel::result::Error::NotFound) | ApiError::NotFoundError(_) => {
                 actix_web::error::ErrorNotFound(String::from("the resource doesn't exists"))
             }
             ApiError::DieselError(diesel::result::Error::DatabaseError(
