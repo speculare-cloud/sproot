@@ -34,22 +34,3 @@ pub struct Alerts {
     // Where SQL condition
     pub where_clause: Option<String>,
 }
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub enum HostTargeted {
-    ALL,
-    SPECIFIC(String),
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct AlertsConfig {
-    pub name: String,
-    pub table: String,
-    pub lookup: String,
-    pub timing: i32,
-    pub warn: String,
-    pub crit: String,
-    pub info: Option<String>,
-    pub where_clause: Option<String>,
-    pub host_targeted: Option<HostTargeted>,
-}
