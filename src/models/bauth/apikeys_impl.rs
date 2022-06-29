@@ -2,7 +2,7 @@ use super::{ApiKey, ApiKeyDTO};
 
 use crate::apierrors::ApiError;
 use crate::models::schema::apikeys::dsl::{
-    apikeys as dsl_apikeys, customer_id, host_uuid, id, key,
+    apikeys as dsl_apikeys, berta, customer_id, host_uuid, id, key,
 };
 use crate::ConnType;
 
@@ -35,6 +35,21 @@ impl ApiKey {
     /// * `hkey` - The apiKey, will be used for lookup
     pub fn get_entry(conn: &mut ConnType, hkey: &str) -> Result<Self, ApiError> {
         Ok(dsl_apikeys.filter(key.eq(hkey)).first(conn)?)
+    }
+
+    /// Return a potential ApiKey
+    /// # Params
+    /// * `conn` - The r2d2 connection needed to fetch the data from the db
+    /// * `hkey` - The apiKey, will be used for lookup
+    /// * `cberta` - The supposed berta where the key is registered
+    pub fn get_entry_berta(
+        conn: &mut ConnType,
+        hkey: &str,
+        cberta: &str,
+    ) -> Result<Self, ApiError> {
+        Ok(dsl_apikeys
+            .filter(key.eq(hkey).and(berta.eq(cberta)))
+            .first(conn)?)
     }
 
     /// Check if the entry exists for that pair of customer ID and host_uuid
