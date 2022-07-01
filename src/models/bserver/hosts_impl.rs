@@ -163,7 +163,10 @@ impl Host {
         conn: &mut ConnType,
         hosts_uuid: &[String],
     ) -> Result<Vec<Self>, ApiError> {
-        Ok(dsl_host.filter(uuid.eq_any(hosts_uuid)).load(conn)?)
+        Ok(dsl_host
+            .filter(uuid.eq_any(hosts_uuid))
+            .order_by(hostname.asc())
+            .load(conn)?)
     }
 
     /// Return a Host from his UUID
