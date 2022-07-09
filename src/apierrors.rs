@@ -1,3 +1,7 @@
+use axum::{
+    http::StatusCode,
+    response::{IntoResponse, Response},
+};
 use diesel::result::DatabaseErrorKind;
 use thiserror::Error;
 
@@ -50,11 +54,15 @@ pub enum ApiError {
 
     #[error("threading exception")]
     ActixBlockingError(#[from] actix_web::error::BlockingError),
+
+    #[error("{0}")]
+    ExplicitError(String),
 }
 
 impl From<ApiError> for actix_web::error::Error {
     fn from(err: ApiError) -> actix_web::error::Error {
         match err {
+            ApiError::ExplicitError(desc) => actix_web::error::ErrorBadRequest(desc),
             ApiError::InvalidRequestError(_) | ApiError::SerdeError(_) | ApiError::SimdError(_) => {
                 actix_web::error::ErrorBadRequest(err)
             }
@@ -74,6 +82,30 @@ impl From<ApiError> for actix_web::error::Error {
                 error!("logging details of actix_error: {}", err);
                 actix_web::error::ErrorInternalServerError(String::from("server error"))
             }
+        }
+    }
+}
+
+impl IntoResponse for ApiError {
+    fn into_response(self) -> Response {
+        match self {
+            ApiError::ExplicitError(desc) => (StatusCode::BAD_REQUEST, desc).into_response(),
+            ApiError::InvalidRequestError(_) | ApiError::SerdeError(_) | ApiError::SimdError(_) => {
+                (StatusCode::BAD_REQUEST, self).into_response()
+            }
+            ApiError::DieselError(diesel::result::Error::NotFound) | ApiError::NotFoundError(_) => {
+                (StatusCode::NOT_FOUND, "the resource doesn't exists").into_response()
+            }
+            ApiError::DieselError(diesel::result::Error::DatabaseError(
+                DatabaseErrorKind::UniqueViolation,
+                _,
+            )) => (StatusCode::BAD_REQUEST, "the resource already exists").into_response(),
+            ApiError::SessionError(_) | ApiError::AuthorizationError(_) => (
+                StatusCode::UNAUTHORIZED,
+                "protected resource, you are not authorized",
+            )
+                .into_response(),
+            _ => (StatusCode::INTERNAL_SERVER_ERROR, "server error").into_response(),
         }
     }
 }
