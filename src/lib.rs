@@ -29,9 +29,9 @@ macro_rules! field_isset {
     ($value:expr, $name:literal) => {
         match $value {
             Some(x) => Ok(x),
-            None => Err(ApiError::ServerError(String::from(
+            None => Err(ApiError::ServerError(Some(String::from(
                 "config: optional field {} is not defined but is needed.",
-            ))),
+            )))),
         }
     };
 }
