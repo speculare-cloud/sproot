@@ -49,6 +49,12 @@ pub enum ApiError {
     #[error("invalid session: `{0:?}`")]
     SessionError(Option<String>),
 
+    #[error("invalid session: `{0:?}`")]
+    ActixSessionError(#[from] actix_session::SessionGetError),
+
+    #[error("invalid session: `{0:?}`")]
+    ActixSetSessionError(#[from] actix_session::SessionInsertError),
+
     #[error("threading exception")]
     ActixBlockingError(#[from] actix_web::error::BlockingError),
 
@@ -80,6 +86,11 @@ impl From<ApiError> for actix_web::error::Error {
                 actix_web::error::ErrorUnauthorized(
                     x.unwrap_or_else(|| String::from("protected resource, you are not authorized")),
                 )
+            }
+            ApiError::ActixSessionError(_) | ApiError::ActixSetSessionError(_) => {
+                actix_web::error::ErrorUnauthorized(String::from(
+                    "protected resource, you are not authorized",
+                ))
             }
             _ => {
                 error!("logging details of actix_error: {}", err);

@@ -11,8 +11,9 @@ pub mod models;
 
 use crate::apierrors::ApiError;
 
+use actix_session::config::{CookieContentSecurity, PersistentSession};
 use actix_session::storage::CookieSessionStore;
-use actix_session::{CookieContentSecurity, SessionMiddleware};
+use actix_session::SessionMiddleware;
 use diesel::{prelude::PgConnection, r2d2::ConnectionManager};
 use rustls::{Certificate, PrivateKey, ServerConfig};
 use std::fs::File;
@@ -104,9 +105,9 @@ pub fn get_session_middleware(
         CookieSessionStore::default(),
         actix_web::cookie::Key::from(secret),
     )
-    .session_length(actix_session::SessionLength::Predetermined {
-        max_session_length: Some(actix_web::cookie::time::Duration::weeks(12)),
-    })
+    .session_lifecycle(
+        PersistentSession::default().session_ttl(actix_web::cookie::time::Duration::weeks(12)),
+    )
     .cookie_domain(cookie_domain)
     .cookie_name(cookie_name)
     .cookie_content_security(CookieContentSecurity::Signed)
