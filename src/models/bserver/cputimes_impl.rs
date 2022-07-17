@@ -1,28 +1,25 @@
-use super::{CpuTimes, CpuTimesDTO, CpuTimesDTORaw};
-
-use crate::apierrors::ApiError;
-use crate::models::schema::cputimes::dsl::{cputimes as dsl_cputimes, created_at, host_uuid};
-use crate::models::{get_granularity, HttpPostHost};
-use crate::ConnType;
-
 use diesel::{
     sql_types::{Text, Timestamp},
     *,
 };
 
-impl CpuTimes {
-    /// Return a Vector of CpuTimes
-    /// # Params
-    /// * `conn` - The r2d2 connection needed to fetch the data from the db
-    /// * `uuid` - The host's uuid we want to get CpuTimes of
-    /// * `size` - The number of elements to fetch
-    /// * `page` - How many items you want to skip (page * size)
-    pub fn get_data(
+use super::{BaseMetrics, CFrom, CpuTimes, CpuTimesDTO, CpuTimesDTORaw};
+use crate::apierrors::ApiError;
+use crate::models::schema::cputimes::dsl::{cputimes as dsl_cputimes, created_at, host_uuid};
+use crate::models::{get_granularity, HttpHost};
+use crate::ConnType;
+
+impl BaseMetrics for CpuTimes {
+    type VecReturn = Vec<CpuTimes>;
+
+    type VecRawReturn = Vec<CpuTimesDTORaw>;
+
+    fn get(
         conn: &mut ConnType,
         uuid: &str,
         size: i64,
         page: i64,
-    ) -> Result<Vec<Self>, ApiError> {
+    ) -> Result<Self::VecReturn, ApiError> {
         Ok(dsl_cputimes
             .filter(host_uuid.eq(uuid))
             .limit(size)
@@ -31,28 +28,14 @@ impl CpuTimes {
             .load(conn)?)
     }
 
-    /// Return a Vector of CpuTimes between min_date and max_date
-    /// # Params
-    /// * `conn` - The r2d2 connection needed to fetch the data from the db
-    /// * `uuid` - The host's uuid we want to get CpuTimes of
-    /// * `size` - The number of elements to fetch
-    /// * `min_date` - Min timestamp for the data to be fetched
-    /// * `max_date` - Max timestamp for the data to be fetched
-    pub fn get_data_dated(
+    fn get_dated(
         conn: &mut ConnType,
         uuid: &str,
         min_date: chrono::NaiveDateTime,
         max_date: chrono::NaiveDateTime,
-    ) -> Result<Vec<CpuTimesDTORaw>, ApiError> {
+    ) -> Result<Self::VecRawReturn, ApiError> {
         let size = (max_date - min_date).num_seconds();
         let granularity = get_granularity(size);
-
-        // Dummy require to ensure no issue if table name change.
-        // If the table's name is to be changed, we have to change it from the sql_query below.
-        {
-            #[allow(unused_imports)]
-            use crate::models::schema::cputimes;
-        }
 
         // Prepare and run the query
         Ok(sql_query(format!(
@@ -92,20 +75,24 @@ impl CpuTimes {
     }
 }
 
-impl<'a> CpuTimesDTO<'a> {
-    pub fn cfrom(item: &'a HttpPostHost, huuid: &'a str) -> Option<CpuTimesDTO<'a>> {
+impl<'a> CFrom<&'a HttpHost> for CpuTimesDTO<'a> {
+    type RET = Self;
+    type UUID = &'a str;
+
+    fn cfrom(item: &'a HttpHost, huuid: Self::UUID) -> Option<Self::RET> {
         let cputimes = item.cpu_times.as_ref()?;
+
         Some(Self {
-            cuser: cputimes.user,
-            nice: cputimes.nice,
-            system: cputimes.system,
-            idle: cputimes.idle,
-            iowait: cputimes.iowait,
-            irq: cputimes.irq,
-            softirq: cputimes.softirq,
-            steal: cputimes.steal,
-            guest: cputimes.guest,
-            guest_nice: cputimes.guest_nice,
+            cuser: cputimes.user as i64,
+            nice: cputimes.nice as i64,
+            system: cputimes.system as i64,
+            idle: cputimes.idle as i64,
+            iowait: cputimes.iowait as i64,
+            irq: cputimes.irq as i64,
+            softirq: cputimes.softirq as i64,
+            steal: cputimes.steal as i64,
+            guest: cputimes.guest as i64,
+            guest_nice: cputimes.guest_nice as i64,
             host_uuid: huuid,
             created_at: item.created_at,
         })

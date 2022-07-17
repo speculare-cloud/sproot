@@ -18,9 +18,6 @@ mod hosts_impl;
 pub use hosts::*;
 pub use hosts_impl::*;
 
-mod http_models;
-pub use http_models::*;
-
 mod ionet;
 mod ionet_impl;
 pub use ionet::*;
@@ -44,3 +41,35 @@ pub use memory_impl::*;
 mod swap;
 mod swap_impl;
 pub use swap::*;
+
+use crate::{ApiError, ConnType};
+
+pub trait BaseMetrics {
+    type VecReturn;
+    type VecRawReturn;
+
+    fn get(
+        conn: &mut ConnType,
+        uuid: &str,
+        size: i64,
+        page: i64,
+    ) -> Result<Self::VecReturn, ApiError>;
+
+    fn get_dated(
+        conn: &mut ConnType,
+        uuid: &str,
+        min_date: chrono::NaiveDateTime,
+        max_date: chrono::NaiveDateTime,
+    ) -> Result<Self::VecRawReturn, ApiError>;
+}
+
+pub trait ExtMetrics {
+    fn count_unique(conn: &mut ConnType, uuid: &str, size: i64) -> Result<i64, ApiError>;
+}
+
+pub trait CFrom<T>: Sized {
+    type RET;
+    type UUID;
+
+    fn cfrom(_: T, huuid: Self::UUID) -> Option<Self::RET>;
+}

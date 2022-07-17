@@ -1,5 +1,6 @@
-use crate::models::schema::cpustats;
 use serde::{Deserialize, Serialize};
+
+use crate::models::schema::cpustats;
 
 /// DB Specific struct for cpustats table
 #[derive(Identifiable, Queryable, Debug, Serialize, Deserialize)]

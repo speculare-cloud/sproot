@@ -1,6 +1,6 @@
-use crate::models::schema::loadavg;
-
 use serde::{Deserialize, Serialize};
+
+use crate::models::schema::loadavg;
 
 /// DB Specific struct for loadavg table
 #[derive(Identifiable, Queryable, Debug, Serialize, Deserialize)]

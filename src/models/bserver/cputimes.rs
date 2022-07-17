@@ -1,6 +1,6 @@
-use crate::models::schema::cputimes;
-
 use serde::{Deserialize, Serialize};
+
+use crate::models::schema::cputimes;
 
 /// DB Specific struct for cputimes table
 #[derive(Identifiable, Queryable, Debug, Serialize, Deserialize)]

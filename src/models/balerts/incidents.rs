@@ -1,7 +1,7 @@
-use crate::models::schema::incidents;
-
 use diesel::*;
 use serde::{Deserialize, Serialize};
+
+use crate::models::schema::incidents;
 
 /// Struct to hold information about incidents
 /// Yes it's a lot of duplicate from the Alerts but as the Alerts can be updated

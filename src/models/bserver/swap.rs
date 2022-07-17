@@ -1,6 +1,6 @@
-use crate::models::schema::swap;
-
 use serde::{Deserialize, Serialize};
+
+use crate::models::schema::swap;
 
 /// DB Specific struct for swap table
 #[derive(Identifiable, Queryable, Debug, Serialize, Deserialize)]

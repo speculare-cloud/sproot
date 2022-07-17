@@ -1,28 +1,25 @@
-use super::{Swap, SwapDTO, SwapDTORaw};
-
-use crate::apierrors::ApiError;
-use crate::models::schema::swap::dsl::{created_at, host_uuid, swap as dsl_swap};
-use crate::models::{get_granularity, HttpPostHost};
-use crate::ConnType;
-
 use diesel::{
     sql_types::{Text, Timestamp},
     *,
 };
 
-impl Swap {
-    /// Return a Vector of Swap
-    /// # Params
-    /// * `conn` - The r2d2 connection needed to fetch the data from the db
-    /// * `uuid` - The host's uuid we want to get Swap of
-    /// * `size` - The number of elements to fetch
-    /// * `page` - How many items you want to skip (page * size)
-    pub fn get_data(
+use super::{BaseMetrics, CFrom, Swap, SwapDTO, SwapDTORaw};
+use crate::apierrors::ApiError;
+use crate::models::schema::swap::dsl::{created_at, host_uuid, swap as dsl_swap};
+use crate::models::{get_granularity, HttpHost};
+use crate::ConnType;
+
+impl BaseMetrics for Swap {
+    type VecReturn = Vec<Swap>;
+
+    type VecRawReturn = Vec<SwapDTORaw>;
+
+    fn get(
         conn: &mut ConnType,
         uuid: &str,
         size: i64,
         page: i64,
-    ) -> Result<Vec<Self>, ApiError> {
+    ) -> Result<Self::VecReturn, ApiError> {
         Ok(dsl_swap
             .filter(host_uuid.eq(uuid))
             .limit(size)
@@ -31,28 +28,14 @@ impl Swap {
             .load(conn)?)
     }
 
-    /// Return a Vector of Swap between min_date and max_date
-    /// # Params
-    /// * `conn` - The r2d2 connection needed to fetch the data from the db
-    /// * `uuid` - The host's uuid we want to get Swap of
-    /// * `size` - The number of elements to fetch
-    /// * `min_date` - Min timestamp for the data to be fetched
-    /// * `max_date` - Max timestamp for the data to be fetched
-    pub fn get_data_dated(
+    fn get_dated(
         conn: &mut ConnType,
         uuid: &str,
         min_date: chrono::NaiveDateTime,
         max_date: chrono::NaiveDateTime,
-    ) -> Result<Vec<SwapDTORaw>, ApiError> {
+    ) -> Result<Self::VecRawReturn, ApiError> {
         let size = (max_date - min_date).num_seconds();
         let granularity = get_granularity(size);
-
-        // Dummy require to ensure no issue if table name change.
-        // If the table's name is to be changed, we have to change it from the sql_query below.
-        {
-            #[allow(unused_imports)]
-            use crate::models::schema::swap;
-        }
 
         // Prepare and run the query
         Ok(sql_query(format!(
@@ -82,8 +65,11 @@ impl Swap {
     }
 }
 
-impl<'a> SwapDTO<'a> {
-    pub fn cfrom(item: &'a HttpPostHost, huuid: &'a str) -> Option<SwapDTO<'a>> {
+impl<'a> CFrom<&'a HttpHost> for SwapDTO<'a> {
+    type RET = Self;
+    type UUID = &'a str;
+
+    fn cfrom(item: &'a HttpHost, huuid: Self::UUID) -> Option<Self::RET> {
         let swap = item.swap.as_ref()?;
         Some(Self {
             total: swap.total as i64,

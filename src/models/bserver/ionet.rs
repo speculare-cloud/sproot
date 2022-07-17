@@ -1,7 +1,7 @@
-use crate::models::schema::ionets;
-
 use diesel::{sql_types::Int8, *};
 use serde::{Deserialize, Serialize};
+
+use crate::models::schema::ionets;
 
 /// DB Specific struct for ionets table
 #[derive(Identifiable, Queryable, Debug, Serialize, Deserialize)]

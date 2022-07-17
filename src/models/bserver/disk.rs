@@ -1,7 +1,6 @@
-use crate::models::schema::disks;
-
-use diesel::{sql_types::Int8, *};
 use serde::{Deserialize, Serialize};
+
+use crate::models::schema::disks;
 
 /// DB Specific struct for disks table
 #[derive(Identifiable, Queryable, Debug, Serialize, Deserialize)]
@@ -23,12 +22,6 @@ pub struct DiskDTORaw {
     pub total_space: i64,
     pub avail_space: i64,
     pub created_at: chrono::NaiveDateTime,
-}
-
-#[derive(Queryable, QueryableByName, Serialize)]
-pub struct DisksCount {
-    #[diesel(sql_type = Int8)]
-    pub count: i64,
 }
 
 // ================

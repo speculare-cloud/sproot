@@ -1,8 +1,8 @@
-use crate::models::schema::apikeys;
-
 use diesel::*;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+
+use crate::models::schema::apikeys;
 
 #[derive(Debug, Queryable, QueryableByName, Serialize, Deserialize)]
 #[diesel(table_name = apikeys)]

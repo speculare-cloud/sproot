@@ -1,6 +1,6 @@
-use crate::models::schema::memory;
-
 use serde::{Deserialize, Serialize};
+
+use crate::models::schema::memory;
 
 /// DB Specific struct for memory table
 #[derive(Identifiable, Queryable, Debug, Serialize, Deserialize)]

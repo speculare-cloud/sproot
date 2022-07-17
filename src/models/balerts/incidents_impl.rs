@@ -1,27 +1,36 @@
-use super::{Incidents, IncidentsDTO, IncidentsDTOUpdate};
+use diesel::*;
 
+use super::{Incidents, IncidentsDTO, IncidentsDTOUpdate};
 use crate::apierrors::ApiError;
 use crate::models::schema::incidents::dsl::{
     alerts_id, host_uuid, id, incidents as dsl_incidents, status, updated_at,
 };
+use crate::models::{BaseCrud, DtoBase, ExtCrud};
 use crate::ConnType;
 
-use diesel::*;
-
 impl Incidents {
-    /// Return a Vector of Incidents for a specific host
-    /// # Params
-    /// * `conn` - The r2d2 connection needed to fetch the data from the db
-    /// * `uuid` - The host's uuid we want to get incidents of
-    /// * `size` - The number of elements to fetch
-    /// * `page` - How many items you want to skip (page * size)
-    pub fn get_list_host(
+    pub fn find_active(conn: &mut ConnType, aid: &str) -> Result<Self, ApiError> {
+        Ok(dsl_incidents
+            .filter(alerts_id.eq(aid).and(status.eq(0)))
+            .first(conn)?)
+    }
+}
+
+impl<'a> BaseCrud<'a> for Incidents {
+    type RetType = Incidents;
+
+    type VecRetType = Vec<Self::RetType>;
+
+    type TargetType = i32;
+
+    type UuidType = &'a str;
+
+    fn get(
         conn: &mut ConnType,
-        uuid: &str,
+        uuid: Self::UuidType,
         size: i64,
         page: i64,
-    ) -> Result<Vec<Self>, ApiError> {
-        // Depending on if the uuid is present or not
+    ) -> Result<Self::VecRetType, ApiError> {
         Ok(dsl_incidents
             .filter(host_uuid.eq(uuid))
             .limit(size)
@@ -30,31 +39,18 @@ impl Incidents {
             .load(conn)?)
     }
 
-    /// Determine if an incident for that specific alert exists and is currently active.
-    /// If one is found, return it, otherwise return a Err(NotFound).
-    /// # Params
-    /// * `conn` - The r2d2 connection needed to fetch the data from the db
-    /// * `target_id` - The id of the alert related to the incident
-    pub fn find_active(conn: &mut ConnType, target_id: &str) -> Result<Self, ApiError> {
-        Ok(dsl_incidents
-            .filter(alerts_id.eq(target_id).and(status.eq(0)))
-            .first(conn)?)
+    fn get_specific(
+        conn: &mut ConnType,
+        target_id: Self::TargetType,
+    ) -> Result<Self::RetType, ApiError> {
+        Ok(dsl_incidents.find(target_id).first(conn)?)
     }
+}
 
-    /// Remove an Incidents inside the database
-    /// # Params
-    /// * `conn` - The r2d2 connection needed to fetch the data from the db
-    /// * `target_id` - The id of the incident to delete
-    pub fn delete(conn: &mut ConnType, target_id: i32) -> Result<usize, ApiError> {
-        Ok(delete(dsl_incidents.filter(id.eq(target_id))).execute(conn)?)
-    }
+impl<'a> ExtCrud<'a> for Incidents {
+    type UuidType = &'a str;
 
-    /// Return the numbers of Incidents within a size limit
-    /// # Params
-    /// * `conn` - The r2d2 connection needed to fetch the data from the db
-    /// * `uuid` - The host's uuid we want to get incidents of
-    /// * `size` - The number of elements to fetch
-    pub fn count(conn: &mut ConnType, uuid: &str, size: i64) -> Result<i64, ApiError> {
+    fn count(conn: &mut ConnType, uuid: Self::UuidType, size: i64) -> Result<i64, ApiError> {
         Ok(dsl_incidents
             .filter(host_uuid.eq(uuid))
             .limit(size)
@@ -63,34 +59,48 @@ impl Incidents {
     }
 }
 
-impl IncidentsDTO {
-    /// Insert new Incidents inside the database
-    /// # Params
-    /// * `conn` - The r2d2 connection needed to fetch the data from the db
-    /// * `incidents` - The Incidents struct containing the new incident information
-    pub fn insert(&self, conn: &mut ConnType) -> Result<usize, ApiError> {
-        Ok(insert_into(dsl_incidents).values(self).execute(conn)?)
+impl<'a> DtoBase<'a> for Incidents {
+    type GetReturn = Incidents;
+
+    type InsertType = &'a IncidentsDTO;
+
+    type UpdateType = &'a IncidentsDTOUpdate;
+
+    type TargetType = i32;
+
+    fn insert(conn: &mut ConnType, value: Self::InsertType) -> Result<usize, ApiError> {
+        Ok(insert_into(dsl_incidents).values(value).execute(conn)?)
     }
 
-    /// Insert a new Incident inside the database and return the inserted row
-    /// # Params
-    /// * `conn` - The r2d2 connection needed to fetch the data from the db
-    /// * `incidents` - The Incident struct containing the new incident information
-    pub fn ginsert(&self, conn: &mut ConnType) -> Result<Incidents, ApiError> {
-        Ok(insert_into(dsl_incidents).values(self).get_result(conn)?)
+    fn insert_and_get(
+        conn: &mut ConnType,
+        value: Self::InsertType,
+    ) -> Result<Self::GetReturn, ApiError> {
+        Ok(insert_into(dsl_incidents).values(value).get_result(conn)?)
     }
-}
 
-impl IncidentsDTOUpdate {
-    /// Update an Incidents inside the database and return the updated Struct
-    /// # Params
-    /// * `conn` - The r2d2 connection needed to fetch the data from the db
-    /// * `incidents` - The HttpIncidents struct containing the updated incident information
-    /// * `target_id` - The id of the incident to update
-    pub fn gupdate(&self, conn: &mut ConnType, target_id: i32) -> Result<Incidents, ApiError> {
+    fn update(
+        conn: &mut ConnType,
+        target_id: Self::TargetType,
+        value: Self::UpdateType,
+    ) -> Result<usize, ApiError> {
         Ok(update(dsl_incidents.filter(id.eq(target_id)))
-            .set(self)
+            .set(value)
+            .execute(conn)?)
+    }
+
+    fn update_and_get(
+        conn: &mut ConnType,
+        target_id: Self::TargetType,
+        value: Self::UpdateType,
+    ) -> Result<Self::GetReturn, ApiError> {
+        Ok(update(dsl_incidents.filter(id.eq(target_id)))
+            .set(value)
             .get_result(conn)?)
+    }
+
+    fn delete(conn: &mut ConnType, target_id: Self::TargetType) -> Result<usize, ApiError> {
+        Ok(delete(dsl_incidents.find(target_id)).execute(conn)?)
     }
 }
 

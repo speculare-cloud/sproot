@@ -1,8 +1,8 @@
-use crate::models::schema::customers;
-
 use diesel::*;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+
+use crate::models::schema::customers;
 
 #[derive(Debug, Queryable, QueryableByName, Serialize, Deserialize)]
 #[diesel(table_name = customers)]

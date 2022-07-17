@@ -1,28 +1,25 @@
-use super::{Memory, MemoryDTO, MemoryDTORaw};
-
-use crate::apierrors::ApiError;
-use crate::models::schema::memory::dsl::{created_at, host_uuid, memory as dsl_memory};
-use crate::models::{get_granularity, HttpPostHost};
-use crate::ConnType;
-
 use diesel::{
     sql_types::{Text, Timestamp},
     *,
 };
 
-impl Memory {
-    /// Return a Vector of Memory
-    /// # Params
-    /// * `conn` - The r2d2 connection needed to fetch the data from the db
-    /// * `uuid` - The host's uuid we want to get Memory of
-    /// * `size` - The number of elements to fetch
-    /// * `page` - How many items you want to skip (page * size)
-    pub fn get_data(
+use super::{BaseMetrics, CFrom, Memory, MemoryDTO, MemoryDTORaw};
+use crate::apierrors::ApiError;
+use crate::models::schema::memory::dsl::{created_at, host_uuid, memory as dsl_memory};
+use crate::models::{get_granularity, HttpHost};
+use crate::ConnType;
+
+impl BaseMetrics for Memory {
+    type VecReturn = Vec<Memory>;
+
+    type VecRawReturn = Vec<MemoryDTORaw>;
+
+    fn get(
         conn: &mut ConnType,
         uuid: &str,
         size: i64,
         page: i64,
-    ) -> Result<Vec<Self>, ApiError> {
+    ) -> Result<Self::VecReturn, ApiError> {
         Ok(dsl_memory
             .filter(host_uuid.eq(uuid))
             .limit(size)
@@ -31,28 +28,14 @@ impl Memory {
             .load(conn)?)
     }
 
-    /// Return a Vector of Memory between min_date and max_date
-    /// # Params
-    /// * `conn` - The r2d2 connection needed to fetch the data from the db
-    /// * `uuid` - The host's uuid we want to get Memory of
-    /// * `size` - The number of elements to fetch
-    /// * `min_date` - Min timestamp for the data to be fetched
-    /// * `max_date` - Max timestamp for the data to be fetched
-    pub fn get_data_dated(
+    fn get_dated(
         conn: &mut ConnType,
         uuid: &str,
         min_date: chrono::NaiveDateTime,
         max_date: chrono::NaiveDateTime,
-    ) -> Result<Vec<MemoryDTORaw>, ApiError> {
+    ) -> Result<Self::VecRawReturn, ApiError> {
         let size = (max_date - min_date).num_seconds();
         let granularity = get_granularity(size);
-
-        // Dummy require to ensure no issue if table name change.
-        // If the table's name is to be changed, we have to change it from the sql_query below.
-        {
-            #[allow(unused_imports)]
-            use crate::models::schema::memory;
-        }
 
         // Prepare and run the query
         Ok(sql_query(format!(
@@ -84,9 +67,13 @@ impl Memory {
     }
 }
 
-impl<'a> MemoryDTO<'a> {
-    pub fn cfrom(item: &'a HttpPostHost, huuid: &'a str) -> Option<MemoryDTO<'a>> {
+impl<'a> CFrom<&'a HttpHost> for MemoryDTO<'a> {
+    type RET = Self;
+    type UUID = &'a str;
+
+    fn cfrom(item: &'a HttpHost, huuid: Self::UUID) -> Option<Self::RET> {
         let memory = item.memory.as_ref()?;
+
         Some(Self {
             total: memory.total as i64,
             free: memory.free as i64,

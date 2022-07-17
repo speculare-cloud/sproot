@@ -1,7 +1,7 @@
-use crate::models::schema::alerts;
-
 use diesel::*;
 use serde::{Deserialize, Serialize};
+
+use crate::models::schema::alerts;
 
 #[derive(Identifiable, Insertable, Queryable, Debug, Serialize, Deserialize, Clone)]
 #[diesel(table_name = alerts)]

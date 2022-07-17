@@ -9,16 +9,17 @@ extern crate diesel;
 pub mod apierrors;
 pub mod models;
 
-use crate::apierrors::ApiError;
+use std::fs::File;
+use std::io::BufReader;
+use std::{ffi::OsStr, path::Path};
 
 use actix_session::config::{CookieContentSecurity, PersistentSession};
 use actix_session::storage::CookieSessionStore;
 use actix_session::SessionMiddleware;
 use diesel::{prelude::PgConnection, r2d2::ConnectionManager};
 use rustls::{Certificate, PrivateKey, ServerConfig};
-use std::fs::File;
-use std::io::BufReader;
-use std::{ffi::OsStr, path::Path};
+
+use crate::apierrors::ApiError;
 
 // Helper types for less boilerplate code
 pub type Pool = r2d2::Pool<ConnectionManager<PgConnection>>;

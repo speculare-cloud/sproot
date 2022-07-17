@@ -1,7 +1,6 @@
-use crate::models::schema::ioblocks;
-
-use diesel::{sql_types::Int8, *};
 use serde::{Deserialize, Serialize};
+
+use crate::models::schema::ioblocks;
 
 /// DB Specific struct for ioblocks table
 #[derive(Identifiable, Queryable, Debug, Serialize, Deserialize)]
@@ -25,12 +24,6 @@ pub struct IoBlockDTORaw {
     pub read_bytes: i64,
     pub write_bytes: i64,
     pub created_at: chrono::NaiveDateTime,
-}
-
-#[derive(Queryable, QueryableByName, Serialize)]
-pub struct IoBlockCount {
-    #[diesel(sql_type = Int8)]
-    pub count: i64,
 }
 
 // ================

@@ -1,6 +1,12 @@
-use crate::models::schema::hosts;
-
 use serde::{Deserialize, Serialize};
+use sys_metrics::{
+    cpu::{CpuStats, CpuTimes, LoadAvg},
+    disks::{Disks, IoBlock},
+    memory::{Memory, Swap},
+    network::IoNet,
+};
+
+use crate::models::schema::hosts;
 
 /// DB Specific struct for hosts table
 #[derive(Identifiable, Queryable, Debug, Serialize, Deserialize, AsChangeset)]
@@ -26,5 +32,25 @@ pub struct HostDTO<'a> {
     pub hostname: &'a str,
     pub uptime: i64,
     pub uuid: &'a str,
+    pub created_at: chrono::NaiveDateTime,
+}
+
+// ===============
+// HTTP POST model
+// ===============
+#[derive(Debug, Serialize, Deserialize)]
+pub struct HttpHost {
+    pub system: String,
+    pub os_version: String,
+    pub hostname: String,
+    pub uptime: i64,
+    pub cpu_stats: Option<CpuStats>,
+    pub cpu_times: Option<CpuTimes>,
+    pub load_avg: Option<LoadAvg>,
+    pub disks: Option<Vec<Disks>>,
+    pub ioblocks: Option<Vec<IoBlock>>,
+    pub memory: Option<Memory>,
+    pub swap: Option<Swap>,
+    pub ionets: Option<Vec<IoNet>>,
     pub created_at: chrono::NaiveDateTime,
 }

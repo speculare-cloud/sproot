@@ -1,14 +1,13 @@
-use super::{IoNet, IoNetCount, IoNetDTO, IoNetDTORaw};
-
-use crate::apierrors::ApiError;
-use crate::models::schema::ionets::dsl::{created_at, host_uuid, ionets as dsl_ionets};
-use crate::models::{get_granularity, HttpPostHost};
-use crate::ConnType;
-
 use diesel::{
     sql_types::{Int8, Text, Timestamp},
     *,
 };
+
+use super::{CFrom, IoNet, IoNetCount, IoNetDTO, IoNetDTORaw};
+use crate::apierrors::ApiError;
+use crate::models::schema::ionets::dsl::{created_at, host_uuid, ionets as dsl_ionets};
+use crate::models::{get_granularity, HttpHost};
+use crate::ConnType;
 
 impl IoNet {
     /// Return a Vector of IoNet
@@ -119,21 +118,25 @@ impl IoNet {
     }
 }
 
-impl<'a> IoNetDTO<'a> {
-    pub fn cfrom(item: &'a HttpPostHost, huuid: &'a str) -> Option<Vec<IoNetDTO<'a>>> {
+impl<'a> CFrom<&'a HttpHost> for IoNetDTO<'a> {
+    type RET = Vec<Self>;
+    type UUID = &'a str;
+
+    fn cfrom(item: &'a HttpHost, huuid: Self::UUID) -> Option<Self::RET> {
         let ionets = item.ionets.as_ref()?;
         let mut list = Vec::with_capacity(ionets.len());
+
         for iocounter in ionets {
             list.push(Self {
                 interface: &iocounter.interface,
-                rx_bytes: iocounter.rx_bytes,
-                rx_packets: iocounter.rx_packets,
-                rx_errs: iocounter.rx_errs,
-                rx_drop: iocounter.rx_drop,
-                tx_bytes: iocounter.tx_bytes,
-                tx_packets: iocounter.tx_packets,
-                tx_errs: iocounter.tx_errs,
-                tx_drop: iocounter.tx_drop,
+                rx_bytes: iocounter.rx_bytes as i64,
+                rx_packets: iocounter.rx_packets as i64,
+                rx_errs: iocounter.rx_errs as i64,
+                rx_drop: iocounter.rx_drop as i64,
+                tx_bytes: iocounter.tx_bytes as i64,
+                tx_packets: iocounter.tx_packets as i64,
+                tx_errs: iocounter.tx_errs as i64,
+                tx_drop: iocounter.tx_drop as i64,
                 host_uuid: huuid,
                 created_at: item.created_at,
             })

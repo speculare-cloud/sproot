@@ -1,28 +1,32 @@
-use super::Alerts;
-
-use crate::apierrors::ApiError;
-use crate::models::schema::alerts::dsl::{_name, alerts as dsl_alerts, host_uuid, id};
-use crate::ConnType;
-
 use diesel::*;
 
+use super::Alerts;
+use crate::apierrors::ApiError;
+use crate::models::schema::alerts::dsl::{_name, alerts as dsl_alerts, host_uuid};
+use crate::models::{BaseCrud, DtoBase};
+use crate::ConnType;
+
 impl Alerts {
-    pub fn generate_id_from(uuid: &str, name: &str) -> String {
-        sha1_smol::Sha1::from([uuid.as_bytes(), name.as_bytes()].concat()).hexdigest()
+    pub fn get_all(conn: &mut ConnType) -> Result<Vec<Self>, ApiError> {
+        Ok(dsl_alerts.load(conn)?)
     }
+}
 
-    /// Get a list of alerts
-    pub fn get_list(conn: &mut ConnType) -> Result<Vec<Self>, ApiError> {
-        Ok(dsl_alerts.order_by(_name.asc()).load(conn)?)
-    }
+impl<'a> BaseCrud<'a> for Alerts {
+    type RetType = Alerts;
 
-    /// Get a list of alerts for the specific host
-    pub fn get_list_host(
+    type VecRetType = Vec<Self::RetType>;
+
+    type TargetType = &'a str;
+
+    type UuidType = &'a str;
+
+    fn get(
         conn: &mut ConnType,
-        uuid: &str,
+        uuid: Self::UuidType,
         size: i64,
         page: i64,
-    ) -> Result<Vec<Self>, ApiError> {
+    ) -> Result<Self::VecRetType, ApiError> {
         Ok(dsl_alerts
             .filter(host_uuid.eq(uuid))
             .limit(size)
@@ -31,28 +35,48 @@ impl Alerts {
             .load(conn)?)
     }
 
-    /// Get a specific alert
-    pub fn get(conn: &mut ConnType, target_id: &str) -> Result<Self, ApiError> {
+    fn get_specific(conn: &mut ConnType, target_id: &str) -> Result<Self::RetType, ApiError> {
         Ok(dsl_alerts.find(target_id).first(conn)?)
     }
+}
 
-    /// Insert one or multiple alerts
-    pub fn insert(conn: &mut ConnType, alerts: &[Alerts]) -> Result<usize, ApiError> {
-        Ok(insert_into(dsl_alerts).values(alerts).execute(conn)?)
+impl<'a> DtoBase<'a> for Alerts {
+    type GetReturn = Vec<Alerts>;
+
+    type InsertType = &'a [Alerts];
+
+    type UpdateType = Self::InsertType;
+
+    type TargetType = &'a str;
+
+    fn insert(conn: &mut ConnType, value: Self::InsertType) -> Result<usize, ApiError> {
+        Ok(insert_into(dsl_alerts).values(value).execute(conn)?)
     }
 
-    /// Insert and get the result of the alerts inserted
-    pub fn ginsert(conn: &mut ConnType, alerts: &[Alerts]) -> Result<Vec<Self>, ApiError> {
-        Ok(insert_into(dsl_alerts).values(alerts).get_results(conn)?)
+    fn insert_and_get(
+        conn: &mut ConnType,
+        value: Self::InsertType,
+    ) -> Result<Self::GetReturn, ApiError> {
+        Ok(insert_into(dsl_alerts).values(value).get_results(conn)?)
     }
 
-    /// Delete one alert
-    pub fn delete(conn: &mut ConnType, target_id: &str) -> Result<usize, ApiError> {
-        Ok(delete(dsl_alerts.filter(id.eq(target_id))).execute(conn)?)
+    fn update(
+        _conn: &mut ConnType,
+        _target_id: Self::TargetType,
+        _value: Self::UpdateType,
+    ) -> Result<usize, ApiError> {
+        todo!()
     }
 
-    /// Delete all alert (shouldn't be used)
-    pub fn delete_all(conn: &mut ConnType) -> Result<usize, ApiError> {
-        Ok(delete(dsl_alerts).execute(conn)?)
+    fn update_and_get(
+        _conn: &mut ConnType,
+        _target_id: Self::TargetType,
+        _value: Self::UpdateType,
+    ) -> Result<Self::GetReturn, ApiError> {
+        todo!()
+    }
+
+    fn delete(conn: &mut ConnType, target_id: Self::TargetType) -> Result<usize, ApiError> {
+        Ok(delete(dsl_alerts.find(target_id)).execute(conn)?)
     }
 }

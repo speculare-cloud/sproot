@@ -1,7 +1,7 @@
-use crate::Pool;
-
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+
+use crate::{apierrors::ApiError, ConnType, Pool};
 
 mod balerts;
 mod bauth;
@@ -49,4 +49,57 @@ pub fn get_granularity(size: i64) -> u32 {
         86400,
         std::cmp::max(1, ((0.003 * size as f32) * (0.93) + 0.298206) as u32),
     )
+}
+
+pub trait BaseCrud<'a> {
+    type RetType;
+    type VecRetType;
+    type TargetType;
+    type UuidType;
+
+    fn get(
+        conn: &mut ConnType,
+        uuid: Self::UuidType,
+        size: i64,
+        page: i64,
+    ) -> Result<Self::VecRetType, ApiError>;
+
+    fn get_specific(
+        conn: &mut ConnType,
+        target_id: Self::TargetType,
+    ) -> Result<Self::RetType, ApiError>;
+}
+
+pub trait ExtCrud<'a> {
+    type UuidType;
+
+    fn count(conn: &mut ConnType, uuid: Self::UuidType, size: i64) -> Result<i64, ApiError>;
+}
+
+pub trait DtoBase<'a> {
+    type GetReturn;
+    type InsertType;
+    type UpdateType;
+    type TargetType;
+
+    fn insert(conn: &mut ConnType, value: Self::InsertType) -> Result<usize, ApiError>;
+
+    fn insert_and_get(
+        conn: &mut ConnType,
+        value: Self::InsertType,
+    ) -> Result<Self::GetReturn, ApiError>;
+
+    fn update(
+        conn: &mut ConnType,
+        target_id: Self::TargetType,
+        value: Self::UpdateType,
+    ) -> Result<usize, ApiError>;
+
+    fn update_and_get(
+        conn: &mut ConnType,
+        target_id: Self::TargetType,
+        value: Self::UpdateType,
+    ) -> Result<Self::GetReturn, ApiError>;
+
+    fn delete(conn: &mut ConnType, target_id: Self::TargetType) -> Result<usize, ApiError>;
 }
