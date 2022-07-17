@@ -67,12 +67,19 @@ impl BaseMetrics for Disk {
 }
 
 impl ExtMetrics for Disk {
-    fn count_unique(conn: &mut ConnType, uuid: &str, size: i64) -> Result<i64, ApiError> {
+    fn count_unique(
+        conn: &mut ConnType,
+        uuid: &str,
+        min_date: chrono::NaiveDateTime,
+        max_date: chrono::NaiveDateTime,
+    ) -> Result<i64, ApiError> {
         Ok(dsl_disks
             .select(count_distinct(disk_name))
-            .filter(host_uuid.eq(uuid))
-            .limit(size)
-            .order_by(created_at.desc())
+            .filter(
+                host_uuid
+                    .eq(uuid)
+                    .and(created_at.between(min_date, max_date)),
+            )
             .first(conn)?)
     }
 }

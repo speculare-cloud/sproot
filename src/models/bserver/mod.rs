@@ -64,7 +64,12 @@ pub trait BaseMetrics {
 }
 
 pub trait ExtMetrics {
-    fn count_unique(conn: &mut ConnType, uuid: &str, size: i64) -> Result<i64, ApiError>;
+    fn count_unique(
+        conn: &mut ConnType,
+        uuid: &str,
+        min_date: chrono::NaiveDateTime,
+        max_date: chrono::NaiveDateTime,
+    ) -> Result<i64, ApiError>;
 }
 
 pub trait CFrom<T>: Sized {
