@@ -73,7 +73,6 @@ impl ExtMetrics for IoBlock {
             .select(count_distinct(device_name))
             .filter(host_uuid.eq(uuid))
             .limit(size)
-            .order_by(created_at.desc())
             .first(conn)?)
     }
 }

@@ -1,27 +1,26 @@
 use diesel::{
-    sql_types::{Int8, Text, Timestamp},
+    dsl::count_distinct,
+    sql_types::{Text, Timestamp},
     *,
 };
 
-use super::{CFrom, IoNet, IoNetCount, IoNetDTO, IoNetDTORaw};
-use crate::apierrors::ApiError;
+use super::{BaseMetrics, CFrom, ExtMetrics, IoNet, IoNetDTO, IoNetDTORaw};
 use crate::models::schema::ionets::dsl::{created_at, host_uuid, ionets as dsl_ionets};
 use crate::models::{get_granularity, HttpHost};
 use crate::ConnType;
+use crate::{apierrors::ApiError, models::schema::ionets::interface};
 
-impl IoNet {
-    /// Return a Vector of IoNet
-    /// # Params
-    /// * `conn` - The r2d2 connection needed to fetch the data from the db
-    /// * `uuid` - The host's uuid we want to get IoNet of
-    /// * `size` - The number of elements to fetch
-    /// * `page` - How many items you want to skip (page * size)
-    pub fn get_data(
+impl BaseMetrics for IoNet {
+    type VecReturn = Vec<IoNet>;
+
+    type VecRawReturn = Vec<IoNetDTORaw>;
+
+    fn get(
         conn: &mut ConnType,
         uuid: &str,
         size: i64,
         page: i64,
-    ) -> Result<Vec<Self>, ApiError> {
+    ) -> Result<Self::VecReturn, ApiError> {
         Ok(dsl_ionets
             .filter(host_uuid.eq(uuid))
             .limit(size)
@@ -30,28 +29,14 @@ impl IoNet {
             .load(conn)?)
     }
 
-    /// Return a Vector of IoNet between min_date and max_date
-    /// # Params
-    /// * `conn` - The r2d2 connection needed to fetch the data from the db
-    /// * `uuid` - The host's uuid we want to get IoNet of
-    /// * `size` - The number of elements to fetch
-    /// * `min_date` - Min timestamp for the data to be fetched
-    /// * `max_date` - Max timestamp for the data to be fetched
-    pub fn get_data_dated(
+    fn get_dated(
         conn: &mut ConnType,
         uuid: &str,
         min_date: chrono::NaiveDateTime,
         max_date: chrono::NaiveDateTime,
-    ) -> Result<Vec<IoNetDTORaw>, ApiError> {
+    ) -> Result<Self::VecRawReturn, ApiError> {
         let size = (max_date - min_date).num_seconds();
         let granularity = get_granularity(size);
-
-        // Dummy require to ensure no issue if table name change.
-        // If the table's name is to be changed, we have to change it from the sql_query below.
-        {
-            #[allow(unused_imports)]
-            use crate::models::schema::ionets;
-        }
 
         // Prepare and run the query
         Ok(sql_query(format!(
@@ -79,42 +64,15 @@ impl IoNet {
         .bind::<Timestamp, _>(max_date)
         .load(conn)?)
     }
+}
 
-    /// Return the numbers of IoNet the host have
-    /// # Params
-    /// * `conn` - The r2d2 connection needed to fetch the data from the db
-    /// * `uuid` - The host's uuid we want to get the number of IoNet of
-    /// * `size` - The number of elements to fetch
-    pub fn count(conn: &mut ConnType, uuid: &str, size: i64) -> Result<i64, ApiError> {
-        // Dummy require to ensure no issue if table name change.
-        // If the table's name is to be changed, we have to change it from the sql_query below.
-        {
-            #[allow(unused_imports)]
-            use crate::models::schema::ionets;
-        }
-
-        let res = sql_query(
-            "
-            WITH s AS
-                (SELECT id, interface, created_at
-                    FROM ionets
-                    WHERE host_uuid=$1
-                    ORDER BY created_at
-                    DESC LIMIT $2
-                )
-            SELECT
-                COUNT(DISTINCT interface)
-                FROM s",
-        )
-        .bind::<Text, _>(uuid)
-        .bind::<Int8, _>(size)
-        .load::<IoNetCount>(conn)?;
-
-        if res.is_empty() {
-            Ok(0)
-        } else {
-            Ok(res[0].count)
-        }
+impl ExtMetrics for IoNet {
+    fn count_unique(conn: &mut ConnType, uuid: &str, size: i64) -> Result<i64, ApiError> {
+        Ok(dsl_ionets
+            .select(count_distinct(interface))
+            .filter(host_uuid.eq(uuid))
+            .limit(size)
+            .first(conn)?)
     }
 }
 

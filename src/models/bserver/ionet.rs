@@ -1,4 +1,3 @@
-use diesel::{sql_types::Int8, *};
 use serde::{Deserialize, Serialize};
 
 use crate::models::schema::ionets;
@@ -28,12 +27,6 @@ pub struct IoNetDTORaw {
     pub rx_bytes: i64,
     pub tx_bytes: i64,
     pub created_at: chrono::NaiveDateTime,
-}
-
-#[derive(Queryable, QueryableByName, Serialize)]
-pub struct IoNetCount {
-    #[diesel(sql_type = Int8)]
-    pub count: i64,
 }
 
 // ================
