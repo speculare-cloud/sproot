@@ -7,6 +7,8 @@ use crate::models::{BaseCrud, DtoBase};
 use crate::ConnType;
 
 impl Alerts {
+    /// Get all the Alerts (no filter, nothing, just get all)
+    /// - conn: the Database connection
     pub fn get_all(conn: &mut ConnType) -> Result<Vec<Self>, ApiError> {
         Ok(dsl_alerts.load(conn)?)
     }
@@ -21,6 +23,11 @@ impl<'a> BaseCrud<'a> for Alerts {
 
     type UuidType = &'a str;
 
+    /// Get all the Alerts defined for a specific host
+    /// - conn: the Database connection
+    /// - uuid: the targeted's host_uuid
+    /// - size: how many elements to return
+    /// - page: pagination :shrug:
     fn get(
         conn: &mut ConnType,
         uuid: Self::UuidType,
@@ -35,6 +42,9 @@ impl<'a> BaseCrud<'a> for Alerts {
             .load(conn)?)
     }
 
+    /// Get a specific Alert depending on the target_id
+    /// - conn: the Database connection
+    /// - target_id: the targeted alert's id
     fn get_specific(conn: &mut ConnType, target_id: &str) -> Result<Self::RetType, ApiError> {
         Ok(dsl_alerts.find(target_id).first(conn)?)
     }

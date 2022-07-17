@@ -9,6 +9,12 @@ use crate::models::{BaseCrud, DtoBase, ExtCrud};
 use crate::ConnType;
 
 impl Incidents {
+    /// Get the active incident for the specific alert (if any)
+    /// - conn: the Database connection
+    /// - aid: the targeted alert's id
+    ///
+    /// In theory there should at most be one active incidents
+    /// per alert per host. If there's more than one it's not handled.
     pub fn find_active(conn: &mut ConnType, aid: &str) -> Result<Self, ApiError> {
         Ok(dsl_incidents
             .filter(alerts_id.eq(aid).and(status.eq(0)))
@@ -25,6 +31,11 @@ impl<'a> BaseCrud<'a> for Incidents {
 
     type UuidType = &'a str;
 
+    /// Get all the Incidents defined for a specific host
+    /// - conn: the Database connection
+    /// - uuid: the targeted's host_uuid
+    /// - size: how many elements to return
+    /// - page: pagination :shrug:
     fn get(
         conn: &mut ConnType,
         uuid: Self::UuidType,
@@ -39,6 +50,9 @@ impl<'a> BaseCrud<'a> for Incidents {
             .load(conn)?)
     }
 
+    /// Get a specific Incident depending on the target_id
+    /// - conn: the Database connection
+    /// - target_id: the targeted incident's id
     fn get_specific(
         conn: &mut ConnType,
         target_id: Self::TargetType,

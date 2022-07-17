@@ -9,10 +9,16 @@ use crate::models::DtoBase;
 use crate::ConnType;
 
 impl Customers {
+    /// Get the user object by email address
+    /// - conn: the Database connection
+    /// - mail: the email address of the user
     pub fn get_specific(conn: &mut ConnType, mail: &str) -> Result<Customers, ApiError> {
         Ok(dsl_customers.filter(email.eq(mail)).first(conn)?)
     }
 
+    /// Does the user exists?
+    /// - conn: the Database connection
+    /// - cid: the user's UUID
     pub fn exists(conn: &mut ConnType, cid: &Uuid) -> Result<bool, ApiError> {
         Ok(select(exists(dsl_customers.filter(id.eq(cid)))).get_result(conn)?)
     }

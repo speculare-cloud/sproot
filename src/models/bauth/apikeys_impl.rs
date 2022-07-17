@@ -11,6 +11,10 @@ use crate::models::{BaseCrud, DtoBase, ExtCrud};
 use crate::ConnType;
 
 impl ApiKey {
+    /// Get the Api Key object owned by user with secret value
+    /// - conn: the Database connection
+    /// - cid: the user's UUID
+    /// - hkey: the api key you want to get info of
     pub fn get_by_key_and_owner(
         conn: &mut ConnType,
         cid: &Uuid,
@@ -21,10 +25,17 @@ impl ApiKey {
             .first(conn)?)
     }
 
+    /// Get the Api Key object by the secret value
+    /// - conn: the Database connection
+    /// - hkey: the api key you want to get info of
     pub fn get_by_key(conn: &mut ConnType, hkey: &str) -> Result<Self, ApiError> {
         Ok(dsl_apikeys.filter(key.eq(hkey)).first(conn)?)
     }
 
+    /// Get the Api Key object by the secret value and the berta host
+    /// - conn: the Database connection
+    /// - hkey: the api key you want to get info of
+    /// - cberta: the berta on which the api key is allowed
     pub fn get_by_key_berta(
         conn: &mut ConnType,
         hkey: &str,
@@ -35,6 +46,10 @@ impl ApiKey {
             .first(conn)?)
     }
 
+    /// Does the Api Key object owned by user for the specified host exists?
+    /// - conn: the Database connection
+    /// - cid: the user's UUID
+    /// - huuid: the targeted host's uuid
     pub fn exists_by_owner_and_host(
         conn: &mut ConnType,
         cid: &Uuid,
@@ -46,17 +61,26 @@ impl ApiKey {
         .get_result(conn)?)
     }
 
+    /// Does the Api Key object owned by user with the specified secret?
+    /// - conn: the Database connection
+    /// - cid: the user's UUID
+    /// - hkey: the api key you want to get info of
     pub fn exists_by_owner_and_key(
         conn: &mut ConnType,
         cid: &Uuid,
-        ckey: &str,
+        hkey: &str,
     ) -> Result<bool, ApiError> {
         Ok(select(exists(
-            dsl_apikeys.filter(customer_id.eq(cid).and(key.eq(ckey))),
+            dsl_apikeys.filter(customer_id.eq(cid).and(key.eq(hkey))),
         ))
         .get_result(conn)?)
     }
 
+    /// Get all the Api Keys object owned by user
+    /// - conn: the Database connection
+    /// - cid: the user's UUID
+    /// - size: how many elements to return
+    /// - page: pagination :shrug:
     pub fn get_hosts_by_owner(
         conn: &mut ConnType,
         cid: &Uuid,
