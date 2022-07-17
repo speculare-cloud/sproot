@@ -92,7 +92,7 @@ impl Host {
         Ok(())
     }
 
-    pub fn insert_one(conn: &mut ConnType, item: &HttpHost, huuid: &str) -> Result<(), ApiError> {
+    fn insert_one(conn: &mut ConnType, item: &HttpHost, huuid: &str) -> Result<(), ApiError> {
         // Insert Host data, if conflict, only update uptime
         insert_into(hosts)
             .values(HostDTO::cfrom(item, huuid))

@@ -108,6 +108,11 @@ impl<'a> BaseCrud<'a> for ApiKey {
 
     type UuidType = &'a Uuid;
 
+    /// Get all the Api Key defined for a user
+    /// - conn: the Database connection
+    /// - uuid: the targeted's user UUID
+    /// - size: how many elements to return
+    /// - page: pagination :shrug:
     fn get(
         conn: &mut ConnType,
         uuid: Self::UuidType,
@@ -122,6 +127,9 @@ impl<'a> BaseCrud<'a> for ApiKey {
             .load(conn)?)
     }
 
+    /// Get a specific Api Key depending on the target_id
+    /// - conn: the Database connection
+    /// - target_id: the targeted api key's id
     fn get_specific(
         conn: &mut ConnType,
         target_id: Self::TargetType,
