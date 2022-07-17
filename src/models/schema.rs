@@ -157,13 +157,6 @@ table! {
         status -> Int4,
         severity -> Int4,
         alerts_id -> Text,
-        alerts_name -> Varchar,
-        alerts_table -> Varchar,
-        alerts_lookup -> Text,
-        alerts_warn -> Text,
-        alerts_crit -> Text,
-        alerts_info -> Nullable<Text>,
-        alerts_where_clause -> Nullable<Text>,
     }
 }
 

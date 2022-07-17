@@ -20,13 +20,6 @@ pub struct Incidents {
     pub status: i32,
     pub severity: i32,
     pub alerts_id: String,
-    pub alerts_name: String,
-    pub alerts_table: String,
-    pub alerts_lookup: String,
-    pub alerts_warn: String,
-    pub alerts_crit: String,
-    pub alerts_info: Option<String>,
-    pub alerts_where_clause: Option<String>,
 }
 
 /// Insertable struct (no id fields => which is auto generated)
@@ -42,13 +35,6 @@ pub struct IncidentsDTO {
     pub status: i32,
     pub severity: i32,
     pub alerts_id: String,
-    pub alerts_name: String,
-    pub alerts_table: String,
-    pub alerts_lookup: String,
-    pub alerts_warn: String,
-    pub alerts_crit: String,
-    pub alerts_info: Option<String>,
-    pub alerts_where_clause: Option<String>,
 }
 
 /// Using a specific struct for the Update allow us to pass all as None expect the fields we want to update
@@ -64,11 +50,4 @@ pub struct IncidentsDTOUpdate {
     pub status: Option<i32>,
     pub severity: Option<i32>,
     pub alerts_id: Option<String>,
-    pub alerts_name: Option<String>,
-    pub alerts_table: Option<String>,
-    pub alerts_lookup: Option<String>,
-    pub alerts_warn: Option<String>,
-    pub alerts_crit: Option<String>,
-    pub alerts_info: Option<String>,
-    pub alerts_where_clause: Option<String>,
 }

@@ -116,13 +116,6 @@ impl From<Incidents> for IncidentsDTO {
             status: incident.status,
             severity: incident.severity,
             alerts_id: incident.alerts_id,
-            alerts_name: incident.alerts_name,
-            alerts_table: incident.alerts_table,
-            alerts_lookup: incident.alerts_lookup,
-            alerts_warn: incident.alerts_warn,
-            alerts_crit: incident.alerts_crit,
-            alerts_info: incident.alerts_info,
-            alerts_where_clause: incident.alerts_where_clause,
         }
     }
 }
@@ -139,13 +132,6 @@ impl From<Incidents> for IncidentsDTOUpdate {
             status: Some(incident.status),
             severity: Some(incident.severity),
             alerts_id: Some(incident.alerts_id),
-            alerts_name: Some(incident.alerts_name),
-            alerts_table: Some(incident.alerts_table),
-            alerts_lookup: Some(incident.alerts_lookup),
-            alerts_warn: Some(incident.alerts_warn),
-            alerts_crit: Some(incident.alerts_crit),
-            alerts_info: incident.alerts_info,
-            alerts_where_clause: incident.alerts_where_clause,
         }
     }
 }
