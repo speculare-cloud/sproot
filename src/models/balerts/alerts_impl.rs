@@ -3,7 +3,7 @@ use diesel::*;
 use super::Alerts;
 use crate::apierrors::ApiError;
 use crate::models::schema::alerts::dsl::{_name, alerts as dsl_alerts, host_uuid};
-use crate::models::{BaseCrud, DtoBase};
+use crate::models::{BaseCrud, DtoBase, ExtCrud};
 use crate::ConnType;
 
 impl Alerts {
@@ -47,6 +47,18 @@ impl<'a> BaseCrud<'a> for Alerts {
     /// - target_id: the targeted alert's id
     fn get_specific(conn: &mut ConnType, target_id: &str) -> Result<Self::RetType, ApiError> {
         Ok(dsl_alerts.find(target_id).first(conn)?)
+    }
+}
+
+impl<'a> ExtCrud<'a> for Alerts {
+    type UuidType = &'a str;
+
+    fn count(conn: &mut ConnType, uuid: Self::UuidType, size: i64) -> Result<i64, ApiError> {
+        Ok(dsl_alerts
+            .filter(host_uuid.eq(uuid))
+            .limit(size)
+            .count()
+            .get_result(conn)?)
     }
 }
 
