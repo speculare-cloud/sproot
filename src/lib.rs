@@ -25,25 +25,41 @@ use crate::apierrors::ApiError;
 pub type Pool = r2d2::Pool<ConnectionManager<PgConnection>>;
 pub type ConnType = r2d2::PooledConnection<ConnectionManager<PgConnection>>;
 
-/// Evaluate an Enum into the value it hold
+// Assert that a field is defined or return an error
 #[macro_export]
 macro_rules! field_isset {
     ($value:expr, $name:literal) => {
         match $value {
             Some(x) => Ok(x),
-            None => Err(ApiError::ServerError(Some(String::from(
-                "config: optional field {} is not defined but is needed.",
+            None => Err(ApiError::ServerError(Some(format!(
+                "isset: optional field {} is not defined but is needed",
+                $name
             )))),
         }
     };
 }
 
+/// Evaluate an Enum into the value it hold
 #[macro_export]
 macro_rules! as_variant {
     ($value:expr, $variant:path) => {
         match $value {
             $variant(x) => Some(x),
             _ => None,
+        }
+    };
+}
+
+/// "Unwrap" result and if error return pretty error + fatal exit
+#[macro_export]
+macro_rules! unwrapf {
+    ($value:expr) => {
+        match $value {
+            Ok(x) => x,
+            Err(err) => {
+                error!("result failed: {}", err);
+                std::process::exit(1);
+            }
         }
     };
 }
