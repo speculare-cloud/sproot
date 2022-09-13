@@ -8,11 +8,11 @@ edition = "2021"
 [dependencies]
 sys_metrics = { git = "https://github.com/Martichou/sys_metrics" }
 askama = "0.11"
-actix-web = { version = "4.1", features = ["rustls"] }
+actix-web = { version = "4.2", features = ["rustls"] }
 actix-session = { version = "0.7", features = ["cookie-session"] }
 axum = { version = "0.5" }
 chrono = { version = "0.4", features = ["serde"] }
-diesel = { version = "2.0.0-rc.1", features = ["postgres", "r2d2", "chrono", "uuid"] }
+diesel = { version = "2.0", features = ["postgres", "r2d2", "chrono", "uuid"] }
 futures-util = "0.3"
 log = "0.4"
 r2d2 = "0.8"
