@@ -19,6 +19,7 @@ pub struct Host {
     pub uptime: i64,
     pub uuid: String,
     pub created_at: chrono::NaiveDateTime,
+    pub updated_at: chrono::NaiveDateTime,
 }
 
 // ================

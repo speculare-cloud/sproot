@@ -52,6 +52,7 @@ table! {
         uptime -> Int8,
         uuid -> Varchar,
         created_at -> Timestamp,
+        updated_at -> Timestamp,
     }
 }
 
