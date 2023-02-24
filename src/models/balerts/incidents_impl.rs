@@ -15,7 +15,7 @@ impl Incidents {
     ///
     /// In theory there should at most be one active incidents
     /// per alert per host. If there's more than one it's not handled.
-    pub fn find_active(conn: &mut ConnType, aid: &str) -> Result<Self, ApiError> {
+    pub fn find_active(conn: &mut ConnType, aid: i64) -> Result<Self, ApiError> {
         Ok(dsl_incidents
             .filter(alerts_id.eq(aid).and(status.eq(0)))
             .first(conn)?)

@@ -19,7 +19,7 @@ impl<'a> BaseCrud<'a> for Alerts {
 
     type VecRetType = Vec<Self::RetType>;
 
-    type TargetType = &'a str;
+    type TargetType = i64;
 
     type UuidType = &'a str;
 
@@ -45,7 +45,10 @@ impl<'a> BaseCrud<'a> for Alerts {
     /// Get a specific Alert depending on the target_id
     /// - conn: the Database connection
     /// - target_id: the targeted alert's id
-    fn get_specific(conn: &mut ConnType, target_id: &str) -> Result<Self::RetType, ApiError> {
+    fn get_specific(
+        conn: &mut ConnType,
+        target_id: Self::TargetType,
+    ) -> Result<Self::RetType, ApiError> {
         Ok(dsl_alerts.find(target_id).first(conn)?)
     }
 }
@@ -69,7 +72,7 @@ impl<'a> DtoBase<'a> for Alerts {
 
     type UpdateType = Self::InsertType;
 
-    type TargetType = &'a str;
+    type TargetType = i64;
 
     fn insert(conn: &mut ConnType, value: Self::InsertType) -> Result<usize, ApiError> {
         Ok(insert_into(dsl_alerts).values(value).execute(conn)?)

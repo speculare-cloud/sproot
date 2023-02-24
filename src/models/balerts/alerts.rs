@@ -6,8 +6,7 @@ use crate::models::schema::alerts;
 #[derive(Identifiable, Insertable, Queryable, Debug, Serialize, Deserialize, Clone)]
 #[diesel(table_name = alerts)]
 pub struct Alerts {
-    // The id is the name + host_uuid
-    pub id: String,
+    pub id: i64,
     // The name can't be updated as it's used for the id
     #[diesel(column_name = _name)]
     pub name: String,

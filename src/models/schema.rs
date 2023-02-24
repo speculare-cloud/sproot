@@ -132,7 +132,7 @@ allow_tables_to_appear_in_same_query!(
 
 table! {
     alerts (id) {
-        id -> Text,
+        id -> Int8,
         _name -> Varchar,
         _table -> Varchar,
         lookup -> Text,
@@ -157,7 +157,7 @@ table! {
         hostname -> Varchar,
         status -> Int4,
         severity -> Int4,
-        alerts_id -> Text,
+        alerts_id -> Int8,
     }
 }
 

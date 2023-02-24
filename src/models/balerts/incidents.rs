@@ -19,7 +19,7 @@ pub struct Incidents {
     pub hostname: String,
     pub status: i32,
     pub severity: i32,
-    pub alerts_id: String,
+    pub alerts_id: i64,
 }
 
 /// Insertable struct (no id fields => which is auto generated)
@@ -34,7 +34,7 @@ pub struct IncidentsDTO {
     pub hostname: String,
     pub status: i32,
     pub severity: i32,
-    pub alerts_id: String,
+    pub alerts_id: i64,
 }
 
 /// Using a specific struct for the Update allow us to pass all as None expect the fields we want to update
@@ -49,5 +49,5 @@ pub struct IncidentsDTOUpdate {
     pub hostname: Option<String>,
     pub status: Option<i32>,
     pub severity: Option<i32>,
-    pub alerts_id: Option<String>,
+    pub alerts_id: Option<i64>,
 }
