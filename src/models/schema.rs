@@ -141,6 +141,7 @@ table! {
         crit -> Text,
         info -> Nullable<Text>,
         host_uuid -> Varchar,
+        cid -> Uuid,
         hostname -> Varchar,
         where_clause -> Nullable<Text>,
     }
@@ -158,6 +159,7 @@ table! {
         status -> Int4,
         severity -> Int4,
         alerts_id -> Int8,
+        cid -> Uuid,
     }
 }
 

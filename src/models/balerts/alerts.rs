@@ -1,5 +1,6 @@
 use diesel::*;
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
 use crate::models::schema::alerts;
 
@@ -28,6 +29,8 @@ pub struct Alerts {
     pub info: Option<String>,
     // Targeted host
     pub host_uuid: String,
+    // The "owner" of the Alert
+    pub cid: Uuid,
     // Targeted hostname
     pub hostname: String,
     // Where SQL condition

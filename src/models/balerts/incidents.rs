@@ -1,5 +1,6 @@
 use diesel::*;
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
 use crate::models::schema::incidents;
 
@@ -20,6 +21,7 @@ pub struct Incidents {
     pub status: i32,
     pub severity: i32,
     pub alerts_id: i64,
+    pub cid: Uuid,
 }
 
 /// Insertable struct (no id fields => which is auto generated)
@@ -35,6 +37,7 @@ pub struct IncidentsDTO {
     pub status: i32,
     pub severity: i32,
     pub alerts_id: i64,
+    pub cid: Uuid,
 }
 
 /// Using a specific struct for the Update allow us to pass all as None expect the fields we want to update
@@ -42,12 +45,8 @@ pub struct IncidentsDTO {
 #[diesel(table_name = incidents)]
 pub struct IncidentsDTOUpdate {
     pub result: Option<String>,
-    pub started_at: Option<chrono::NaiveDateTime>,
     pub updated_at: Option<chrono::NaiveDateTime>,
     pub resolved_at: Option<chrono::NaiveDateTime>,
-    pub host_uuid: Option<String>,
-    pub hostname: Option<String>,
     pub status: Option<i32>,
     pub severity: Option<i32>,
-    pub alerts_id: Option<i64>,
 }

@@ -130,6 +130,7 @@ impl From<Incidents> for IncidentsDTO {
             status: incident.status,
             severity: incident.severity,
             alerts_id: incident.alerts_id,
+            cid: incident.cid,
         }
     }
 }
@@ -138,14 +139,10 @@ impl From<Incidents> for IncidentsDTOUpdate {
     fn from(incident: Incidents) -> IncidentsDTOUpdate {
         IncidentsDTOUpdate {
             result: Some(incident.result),
-            started_at: Some(incident.started_at),
             updated_at: Some(incident.updated_at),
             resolved_at: incident.resolved_at,
-            host_uuid: Some(incident.host_uuid),
-            hostname: Some(incident.hostname),
             status: Some(incident.status),
             severity: Some(incident.severity),
-            alerts_id: Some(incident.alerts_id),
         }
     }
 }
