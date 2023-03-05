@@ -1,9 +1,10 @@
 use diesel::*;
+use uuid::Uuid;
 
 use super::{Incidents, IncidentsDTO, IncidentsDTOUpdate};
 use crate::apierrors::ApiError;
 use crate::models::schema::incidents::dsl::{
-    alerts_id, host_uuid, id, incidents as dsl_incidents, status, updated_at,
+    alerts_id, cid, host_uuid, id, incidents as dsl_incidents, status, updated_at,
 };
 use crate::models::{BaseCrud, DtoBase, ExtCrud};
 use crate::ConnType;
@@ -19,6 +20,20 @@ impl Incidents {
         Ok(dsl_incidents
             .filter(alerts_id.eq(aid).and(status.eq(0)))
             .first(conn)?)
+    }
+
+    pub fn get_owned(
+        conn: &mut ConnType,
+        uuid: &Uuid,
+        size: i64,
+        page: i64,
+    ) -> Result<Vec<Self>, ApiError> {
+        Ok(dsl_incidents
+            .filter(cid.eq(uuid))
+            .limit(size)
+            .offset(page * size)
+            .order_by(updated_at.desc())
+            .load(conn)?)
     }
 }
 
