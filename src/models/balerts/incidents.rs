@@ -4,6 +4,8 @@ use uuid::Uuid;
 
 use crate::models::schema::incidents;
 
+use super::Alerts;
+
 /// Struct to hold information about incidents
 /// Yes it's a lot of duplicate from the Alerts but as the Alerts can be updated
 /// we need to store a snapshot of the configuration of the said alerts at the
@@ -49,4 +51,20 @@ pub struct IncidentsDTOUpdate {
     pub resolved_at: Option<chrono::NaiveDateTime>,
     pub status: Option<i32>,
     pub severity: Option<i32>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct IncidentsJoined {
+    #[serde(flatten)]
+    pub incident: Incidents,
+    pub alert: Alerts,
+}
+
+impl From<(Incidents, Alerts)> for IncidentsJoined {
+    fn from(v: (Incidents, Alerts)) -> Self {
+        Self {
+            incident: v.0,
+            alert: v.1,
+        }
+    }
 }

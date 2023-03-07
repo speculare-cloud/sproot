@@ -1,10 +1,14 @@
 use diesel::*;
 use uuid::Uuid;
 
-use super::{Incidents, IncidentsDTO, IncidentsDTOUpdate};
+use super::{Alerts, Incidents, IncidentsDTO, IncidentsDTOUpdate, IncidentsJoined};
 use crate::apierrors::ApiError;
-use crate::models::schema::incidents::dsl::{
-    alerts_id, cid, host_uuid, id, incidents as dsl_incidents, status, updated_at,
+use crate::models::schema::{
+    alerts::{self, dsl::id as alid},
+    incidents::{
+        self,
+        dsl::{alerts_id, cid, host_uuid, id, incidents as dsl_incidents, status, updated_at},
+    },
 };
 use crate::models::{BaseCrud, DtoBase, ExtCrud};
 use crate::ConnType;
@@ -22,6 +26,11 @@ impl Incidents {
             .first(conn)?)
     }
 
+    /// Get the incidents of that particular Uuid (user)
+    /// - conn: the Database connection
+    /// - uuid: the user UUID we want the incidents of
+    /// - size: how many elements to return
+    /// - page: pagination :shrug:
     pub fn get_owned(
         conn: &mut ConnType,
         uuid: &Uuid,
@@ -34,6 +43,31 @@ impl Incidents {
             .offset(page * size)
             .order_by(updated_at.desc())
             .load(conn)?)
+    }
+
+    /// Get the incidents of that particular Uuid (user) linked with the alerts
+    ///
+    /// Note: if the alerts does not exists anymore, it won't return the incident field neither
+    /// TOOD - Take care of this case
+    /// - conn: the Database connection
+    /// - uuid: the user UUID we want the incidents of
+    /// - size: how many elements to return
+    /// - page: pagination :shrug:
+    pub fn get_own_joined(
+        conn: &mut ConnType,
+        uuid: &Uuid,
+        size: i64,
+        page: i64,
+    ) -> Result<Vec<IncidentsJoined>, ApiError> {
+        Ok(incidents::table
+            .filter(cid.eq(uuid))
+            .limit(size)
+            .offset(page * size)
+            .order_by(updated_at.desc())
+            .inner_join(alerts::table.on(alerts_id.eq(alid)))
+            .load::<(Self, Alerts)>(conn)
+            .map(|x| x.into_iter().map(IncidentsJoined::from))?
+            .collect::<Vec<_>>())
     }
 }
 

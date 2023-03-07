@@ -163,6 +163,8 @@ table! {
     }
 }
 
+allow_tables_to_appear_in_same_query!(incidents, alerts);
+
 // !bALERTS models
 // bAUTH models
 
@@ -183,6 +185,6 @@ table! {
     }
 }
 
-allow_tables_to_appear_in_same_query!(apikeys, customers,);
+allow_tables_to_appear_in_same_query!(apikeys, customers);
 
 // !bAUTH models
