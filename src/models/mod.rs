@@ -51,6 +51,16 @@ pub fn get_granularity(size: i64) -> u32 {
     )
 }
 
+#[inline]
+pub fn get_aggregated_views<'a>(size: i64) -> &'a str {
+    // If less than 96h, then use the 10m aggregated (one data point per 10m)
+    if size < 345600 {
+        "_10m"
+    } else {
+        "_30m"
+    }
+}
+
 pub trait BaseCrud<'a> {
     type RetType;
     type VecRetType;

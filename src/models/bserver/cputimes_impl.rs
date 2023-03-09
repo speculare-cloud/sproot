@@ -4,10 +4,10 @@ use diesel::{
 };
 
 use super::{BaseMetrics, CFrom, CpuTimes, CpuTimesDTO, CpuTimesDTORaw};
-use crate::apierrors::ApiError;
 use crate::models::schema::cputimes::dsl::{cputimes as dsl_cputimes, created_at, host_uuid};
 use crate::models::{get_granularity, HttpHost};
 use crate::ConnType;
+use crate::{apierrors::ApiError, models::get_aggregated_views};
 
 impl BaseMetrics for CpuTimes {
     type VecReturn = Vec<CpuTimes>;
@@ -36,6 +36,36 @@ impl BaseMetrics for CpuTimes {
     ) -> Result<Self::VecRawReturn, ApiError> {
         let size = (max_date - min_date).num_seconds();
         let granularity = get_granularity(size);
+
+        // If we're out of the get_granularity function capacity
+        // use the "hardcoded" continuous_aggregated views from
+        // TimescaleDB as defined in get_aggregated_views
+        if granularity > 60 {
+            let view = get_aggregated_views(size);
+
+            // Execute an alternative SQL query
+            return Ok(sql_query(format!(
+                "
+				SELECT
+					cuser,
+					nice,
+					system,
+					idle,
+					iowait,
+					irq,
+					softirq,
+					steal,
+					time as created_at
+				FROM cputimes{}
+				WHERE host_uuid=$1 AND time BETWEEN $2 AND $3
+				ORDER BY time DESC",
+                view
+            ))
+            .bind::<Text, _>(uuid)
+            .bind::<Timestamp, _>(min_date)
+            .bind::<Timestamp, _>(max_date)
+            .load(conn)?);
+        }
 
         // Prepare and run the query
         Ok(sql_query(format!(

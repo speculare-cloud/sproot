@@ -8,7 +8,7 @@ use super::{BaseMetrics, CFrom, ExtMetrics, IoBlock, IoBlockDTO, IoBlockDTORaw};
 use crate::apierrors::ApiError;
 use crate::models::schema::ioblocks::device_name;
 use crate::models::schema::ioblocks::dsl::{created_at, host_uuid, ioblocks as dsl_ioblocks};
-use crate::models::{get_granularity, HttpHost};
+use crate::models::{get_aggregated_views, get_granularity, HttpHost};
 use crate::ConnType;
 
 impl BaseMetrics for IoBlock {
@@ -38,6 +38,31 @@ impl BaseMetrics for IoBlock {
     ) -> Result<Self::VecRawReturn, ApiError> {
         let size = (max_date - min_date).num_seconds();
         let granularity = get_granularity(size);
+
+        // If we're out of the get_granularity function capacity
+        // use the "hardcoded" continuous_aggregated views from
+        // TimescaleDB as defined in get_aggregated_views
+        if granularity > 60 {
+            let view = get_aggregated_views(size);
+
+            // Execute an alternative SQL query
+            return Ok(sql_query(format!(
+                "
+				SELECT
+					device_name,
+					read_bytes,
+					write_bytes,
+					time as created_at
+				FROM ioblocks{}
+				WHERE host_uuid=$1 AND time BETWEEN $2 AND $3
+				ORDER BY time DESC",
+                view
+            ))
+            .bind::<Text, _>(uuid)
+            .bind::<Timestamp, _>(min_date)
+            .bind::<Timestamp, _>(max_date)
+            .load(conn)?);
+        }
 
         // Prepare and run the query
         Ok(sql_query(format!(
