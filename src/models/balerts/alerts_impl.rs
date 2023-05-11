@@ -1,8 +1,11 @@
+use diesel::dsl::exists;
 use diesel::*;
+use uuid::Uuid;
 
 use super::{Alerts, AlertsDTO};
 use crate::apierrors::ApiError;
 use crate::models::schema::alerts::dsl::{_name, alerts as dsl_alerts, host_uuid};
+use crate::models::schema::alerts::{cid, id};
 use crate::models::{BaseCrud, DtoBase, ExtCrud};
 use crate::ConnType;
 
@@ -11,6 +14,18 @@ impl Alerts {
     /// - conn: the Database connection
     pub fn get_all(conn: &mut ConnType) -> Result<Vec<Self>, ApiError> {
         Ok(dsl_alerts.load(conn)?)
+    }
+
+    /// Is the alert owned by the user
+    /// - conn: the Database connection
+    /// - cid: the user's UUID
+    /// - aid: the id of the alert you want to check
+    pub fn exists_by_owner_and_id(
+        conn: &mut ConnType,
+        ccid: &Uuid,
+        aid: i64,
+    ) -> Result<bool, ApiError> {
+        Ok(select(exists(dsl_alerts.filter(cid.eq(ccid).and(id.eq(aid))))).get_result(conn)?)
     }
 }
 
