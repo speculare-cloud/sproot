@@ -91,6 +91,7 @@ pub trait DtoBase<'a> {
     type InsertType;
     type UpdateType;
     type TargetType;
+    type UpdateReturnType;
 
     fn insert(conn: &mut ConnType, value: Self::InsertType) -> Result<usize, ApiError>;
 
@@ -109,7 +110,7 @@ pub trait DtoBase<'a> {
         conn: &mut ConnType,
         target_id: Self::TargetType,
         value: Self::UpdateType,
-    ) -> Result<Self::GetReturn, ApiError>;
+    ) -> Result<Self::UpdateReturnType, ApiError>;
 
     fn delete(conn: &mut ConnType, target_id: Self::TargetType) -> Result<usize, ApiError>;
 }

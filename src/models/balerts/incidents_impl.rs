@@ -131,6 +131,8 @@ impl<'a> DtoBase<'a> for Incidents {
 
     type TargetType = i32;
 
+    type UpdateReturnType = Self::GetReturn;
+
     fn insert(conn: &mut ConnType, value: Self::InsertType) -> Result<usize, ApiError> {
         Ok(insert_into(dsl_incidents).values(value).execute(conn)?)
     }
@@ -156,7 +158,7 @@ impl<'a> DtoBase<'a> for Incidents {
         conn: &mut ConnType,
         target_id: Self::TargetType,
         value: Self::UpdateType,
-    ) -> Result<Self::GetReturn, ApiError> {
+    ) -> Result<Self::UpdateReturnType, ApiError> {
         Ok(update(dsl_incidents.filter(id.eq(target_id)))
             .set(value)
             .get_result(conn)?)

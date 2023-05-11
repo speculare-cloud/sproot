@@ -158,6 +158,8 @@ impl<'a> DtoBase<'a> for ApiKey {
 
     type TargetType = &'a str;
 
+    type UpdateReturnType = Self::GetReturn;
+
     fn insert(conn: &mut ConnType, value: Self::InsertType) -> Result<usize, ApiError> {
         Ok(insert_into(dsl_apikeys).values(value).execute(conn)?)
     }
@@ -183,7 +185,7 @@ impl<'a> DtoBase<'a> for ApiKey {
         conn: &mut ConnType,
         target_id: Self::TargetType,
         value: Self::UpdateType,
-    ) -> Result<Self::GetReturn, ApiError> {
+    ) -> Result<Self::UpdateReturnType, ApiError> {
         Ok(update(dsl_apikeys.filter(key.eq(target_id)))
             .set(value)
             .get_result(conn)?)

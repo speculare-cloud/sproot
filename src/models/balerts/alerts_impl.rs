@@ -1,6 +1,6 @@
 use diesel::*;
 
-use super::Alerts;
+use super::{Alerts, AlertsDTO};
 use crate::apierrors::ApiError;
 use crate::models::schema::alerts::dsl::{_name, alerts as dsl_alerts, host_uuid};
 use crate::models::{BaseCrud, DtoBase, ExtCrud};
@@ -70,9 +70,11 @@ impl<'a> DtoBase<'a> for Alerts {
 
     type InsertType = &'a [Alerts];
 
-    type UpdateType = Self::InsertType;
+    type UpdateType = &'a AlertsDTO;
 
     type TargetType = i64;
+
+    type UpdateReturnType = Alerts;
 
     fn insert(conn: &mut ConnType, value: Self::InsertType) -> Result<usize, ApiError> {
         Ok(insert_into(dsl_alerts).values(value).execute(conn)?)
@@ -86,19 +88,23 @@ impl<'a> DtoBase<'a> for Alerts {
     }
 
     fn update(
-        _conn: &mut ConnType,
-        _target_id: Self::TargetType,
-        _value: Self::UpdateType,
+        conn: &mut ConnType,
+        target_id: Self::TargetType,
+        value: Self::UpdateType,
     ) -> Result<usize, ApiError> {
-        todo!()
+        Ok(update(dsl_alerts.find(target_id))
+            .set(value)
+            .execute(conn)?)
     }
 
     fn update_and_get(
-        _conn: &mut ConnType,
-        _target_id: Self::TargetType,
-        _value: Self::UpdateType,
-    ) -> Result<Self::GetReturn, ApiError> {
-        todo!()
+        conn: &mut ConnType,
+        target_id: Self::TargetType,
+        value: Self::UpdateType,
+    ) -> Result<Self::UpdateReturnType, ApiError> {
+        Ok(update(dsl_alerts.find(target_id))
+            .set(value)
+            .get_result(conn)?)
     }
 
     fn delete(conn: &mut ConnType, target_id: Self::TargetType) -> Result<usize, ApiError> {

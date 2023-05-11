@@ -34,6 +34,8 @@ impl<'a> DtoBase<'a> for Customers {
 
     type TargetType = &'a Uuid;
 
+    type UpdateReturnType = Self::GetReturn;
+
     fn insert(conn: &mut ConnType, value: Self::InsertType) -> Result<usize, ApiError> {
         Ok(insert_into(dsl_customers).values(value).execute(conn)?)
     }

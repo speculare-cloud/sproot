@@ -36,3 +36,20 @@ pub struct Alerts {
     // Where SQL condition
     pub where_clause: Option<String>,
 }
+
+#[derive(Identifiable, AsChangeset, Deserialize, Serialize, Debug, Default)]
+#[diesel(table_name = alerts)]
+pub struct AlertsDTO {
+    pub id: i64,
+    // The name can't be updated as it's used for the id
+    #[diesel(column_name = _name)]
+    pub name: Option<String>,
+    #[diesel(column_name = _table)]
+    pub table: Option<String>,
+    pub lookup: Option<String>,
+    pub timing: Option<i32>,
+    pub warn: Option<String>,
+    pub crit: Option<String>,
+    pub info: Option<String>,
+    pub where_clause: Option<String>,
+}

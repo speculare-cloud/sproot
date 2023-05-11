@@ -87,7 +87,7 @@ pub fn get_ssl_builder(key: &str, cert: &str) -> Result<ServerConfig, ApiError> 
     // If no keys are found, we try using the rsa type
     if keys.is_empty() {
         // Reopen a new BufReader as pkcs8_private_keys took over the previous one
-        let key_file = &mut BufReader::new(File::open(&key)?);
+        let key_file = &mut BufReader::new(File::open(key)?);
         keys = rustls_pemfile::rsa_private_keys(key_file)?;
     }
     // Convert the first key to be a PrivateKey
