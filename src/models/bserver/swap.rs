@@ -1,10 +1,12 @@
 use serde::{Deserialize, Serialize};
+use ts_rs::TS;
 
 use crate::models::schema::swap;
 
 /// DB Specific struct for swap table
-#[derive(Identifiable, Queryable, Debug, Serialize, Deserialize)]
+#[derive(Identifiable, Queryable, Debug, Serialize, Deserialize, TS)]
 #[diesel(table_name = swap)]
+#[ts(export)]
 pub struct Swap {
     pub id: i64,
     pub total: i64,

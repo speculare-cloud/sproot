@@ -1,11 +1,13 @@
 use diesel::*;
 use serde::{Deserialize, Serialize};
+use ts_rs::TS;
 use uuid::Uuid;
 
 use crate::models::schema::apikeys;
 
-#[derive(Debug, Queryable, QueryableByName, Serialize, Deserialize)]
+#[derive(Debug, Queryable, QueryableByName, Serialize, Deserialize, TS)]
 #[diesel(table_name = apikeys)]
+#[ts(export)]
 pub struct ApiKey {
     pub id: i64,
     pub key: String,

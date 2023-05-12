@@ -1,11 +1,13 @@
 use diesel::*;
 use serde::{Deserialize, Serialize};
+use ts_rs::TS;
 use uuid::Uuid;
 
 use crate::models::schema::alerts;
 
-#[derive(Identifiable, Insertable, Queryable, Debug, Serialize, Deserialize, Clone)]
+#[derive(Identifiable, Insertable, Queryable, Debug, Serialize, Deserialize, Clone, TS)]
 #[diesel(table_name = alerts)]
+#[ts(export)]
 pub struct Alerts {
     pub id: i64,
     pub active: bool,
@@ -38,8 +40,9 @@ pub struct Alerts {
     pub where_clause: Option<String>,
 }
 
-#[derive(Identifiable, AsChangeset, Deserialize, Serialize, Debug, Default)]
+#[derive(Identifiable, AsChangeset, Deserialize, Serialize, Debug, Default, TS)]
 #[diesel(table_name = alerts)]
+#[ts(export)]
 pub struct AlertsDTO {
     pub id: i64,
     pub active: Option<bool>,

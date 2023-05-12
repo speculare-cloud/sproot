@@ -1,10 +1,12 @@
 use serde::{Deserialize, Serialize};
+use ts_rs::TS;
 
 use crate::models::schema::memory;
 
 /// DB Specific struct for memory table
-#[derive(Identifiable, Queryable, Debug, Serialize, Deserialize)]
+#[derive(Identifiable, Queryable, Debug, Serialize, Deserialize, TS)]
 #[diesel(table_name = memory)]
+#[ts(export)]
 pub struct Memory {
     pub id: i64,
     pub total: i64,

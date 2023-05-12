@@ -1,5 +1,6 @@
 use diesel::*;
 use serde::{Deserialize, Serialize};
+use ts_rs::TS;
 use uuid::Uuid;
 
 use crate::models::schema::incidents;
@@ -10,8 +11,9 @@ use super::Alerts;
 /// Yes it's a lot of duplicate from the Alerts but as the Alerts can be updated
 /// we need to store a snapshot of the configuration of the said alerts at the
 /// time the incidents was created.
-#[derive(Identifiable, Queryable, Debug, Serialize, Deserialize, Clone)]
+#[derive(Identifiable, Queryable, Debug, Serialize, Deserialize, Clone, TS)]
 #[diesel(table_name = incidents)]
+#[ts(export)]
 pub struct Incidents {
     pub id: i32,
     pub result: String,

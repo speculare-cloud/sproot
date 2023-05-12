@@ -1,10 +1,12 @@
 use serde::{Deserialize, Serialize};
+use ts_rs::TS;
 
 use crate::models::schema::ionets;
 
 /// DB Specific struct for ionets table
-#[derive(Identifiable, Queryable, Debug, Serialize, Deserialize)]
+#[derive(Identifiable, Queryable, Debug, Serialize, Deserialize, TS)]
 #[diesel(table_name = ionets)]
+#[ts(export)]
 pub struct IoNet {
     pub id: i64,
     pub interface: String,

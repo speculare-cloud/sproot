@@ -1,10 +1,12 @@
 use serde::{Deserialize, Serialize};
+use ts_rs::TS;
 
 use crate::models::schema::loadavg;
 
 /// DB Specific struct for loadavg table
-#[derive(Identifiable, Queryable, Debug, Serialize, Deserialize)]
+#[derive(Identifiable, Queryable, Debug, Serialize, Deserialize, TS)]
 #[diesel(table_name = loadavg)]
+#[ts(export)]
 pub struct LoadAvg {
     pub id: i64,
     pub one: f64,

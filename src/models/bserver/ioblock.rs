@@ -1,10 +1,12 @@
 use serde::{Deserialize, Serialize};
+use ts_rs::TS;
 
 use crate::models::schema::ioblocks;
 
 /// DB Specific struct for ioblocks table
-#[derive(Identifiable, Queryable, Debug, Serialize, Deserialize)]
+#[derive(Identifiable, Queryable, Debug, Serialize, Deserialize, TS)]
 #[diesel(table_name = ioblocks)]
+#[ts(export)]
 pub struct IoBlock {
     pub id: i64,
     pub device_name: String,

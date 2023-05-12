@@ -1,10 +1,12 @@
 use serde::{Deserialize, Serialize};
+use ts_rs::TS;
 
 use crate::models::schema::disks;
 
 /// DB Specific struct for disks table
-#[derive(Identifiable, Queryable, Debug, Serialize, Deserialize)]
+#[derive(Identifiable, Queryable, Debug, Serialize, Deserialize, TS)]
 #[diesel(table_name = disks)]
+#[ts(export)]
 pub struct Disk {
     pub id: i64,
     pub disk_name: String,

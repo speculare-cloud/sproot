@@ -1,10 +1,12 @@
 use serde::{Deserialize, Serialize};
+use ts_rs::TS;
 
 use crate::models::schema::cpustats;
 
 /// DB Specific struct for cpustats table
-#[derive(Identifiable, Queryable, Debug, Serialize, Deserialize)]
+#[derive(Identifiable, Queryable, Debug, Serialize, Deserialize, TS)]
 #[diesel(table_name = cpustats)]
+#[ts(export)]
 pub struct CpuStats {
     pub id: i64,
     pub interrupts: i64,

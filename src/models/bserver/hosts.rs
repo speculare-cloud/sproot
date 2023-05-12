@@ -5,13 +5,15 @@ use sys_metrics::{
     memory::{Memory, Swap},
     network::IoNet,
 };
+use ts_rs::TS;
 
 use crate::models::schema::hosts;
 
 /// DB Specific struct for hosts table
-#[derive(Identifiable, Queryable, Debug, Serialize, Deserialize, AsChangeset)]
+#[derive(Identifiable, Queryable, Debug, Serialize, Deserialize, AsChangeset, TS)]
 #[diesel(table_name = hosts)]
 #[diesel(primary_key(uuid))]
+#[ts(export)]
 pub struct Host {
     pub system: String,
     pub os_version: String,
