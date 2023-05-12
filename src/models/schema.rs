@@ -133,6 +133,7 @@ allow_tables_to_appear_in_same_query!(
 table! {
     alerts (id) {
         id -> Int8,
+        active -> Bool,
         _name -> Varchar,
         _table -> Varchar,
         lookup -> Text,

@@ -8,6 +8,7 @@ use crate::models::schema::alerts;
 #[diesel(table_name = alerts)]
 pub struct Alerts {
     pub id: i64,
+    pub active: bool,
     // The name can't be updated as it's used for the id
     #[diesel(column_name = _name)]
     pub name: String,
@@ -41,6 +42,7 @@ pub struct Alerts {
 #[diesel(table_name = alerts)]
 pub struct AlertsDTO {
     pub id: i64,
+    pub active: Option<bool>,
     // The name can't be updated as it's used for the id
     #[diesel(column_name = _name)]
     pub name: Option<String>,
