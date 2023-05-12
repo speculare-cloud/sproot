@@ -107,7 +107,7 @@ impl<'a> DtoBase<'a> for Alerts {
         target_id: Self::TargetType,
         value: Self::UpdateType,
     ) -> Result<usize, ApiError> {
-        Ok(update(dsl_alerts.find(target_id))
+        Ok(update(dsl_alerts.filter(id.eq(target_id)))
             .set(value)
             .execute(conn)?)
     }
@@ -117,7 +117,7 @@ impl<'a> DtoBase<'a> for Alerts {
         target_id: Self::TargetType,
         value: Self::UpdateType,
     ) -> Result<Self::UpdateReturnType, ApiError> {
-        Ok(update(dsl_alerts.find(target_id))
+        Ok(update(dsl_alerts.filter(id.eq(target_id)))
             .set(value)
             .get_result(conn)?)
     }

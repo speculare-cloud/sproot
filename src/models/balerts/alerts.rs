@@ -40,11 +40,10 @@ pub struct Alerts {
     pub where_clause: Option<String>,
 }
 
-#[derive(Identifiable, AsChangeset, Deserialize, Serialize, Debug, Default, TS)]
+#[derive(AsChangeset, Deserialize, Serialize, Debug, Default, TS)]
 #[diesel(table_name = alerts)]
 #[ts(export)]
 pub struct AlertsDTO {
-    pub id: i64,
     pub active: Option<bool>,
     // The name can't be updated as it's used for the id
     #[diesel(column_name = _name)]
