@@ -219,7 +219,7 @@ where
 
         // Assert that we have enough parameters
         if lookup_parts.len() < 5 {
-            return Err(ApiError::ServerError(Some(String::from("query: the lookup query is invalid, define as follow: [aggr] [mode] [timeframe] of [table] {over} {table}"))));
+            return Err(ApiError::InvalidRequestError(Some(String::from("query: the lookup query is invalid, define as follow: [aggr] [mode] [timeframe] of [table] {over} {table}"))));
         }
 
         // Determine the mode of the query it's for now, either Pct or Abs
@@ -227,7 +227,7 @@ where
             "pct" => QueryType::Pct,
             "abs" => QueryType::Abs,
             _ => {
-                return Err(ApiError::ServerError(Some(format!(
+                return Err(ApiError::InvalidRequestError(Some(format!(
                     "query: mode {} is invalid. Valid are: pct, abs.",
                     lookup_parts[1]
                 ))));
@@ -236,7 +236,7 @@ where
 
         // If we're in mode Pct, we need more than 5 parts
         if req_mode == QueryType::Pct && lookup_parts.len() != 7 {
-            return Err(ApiError::ServerError(Some(String::from(
+            return Err(ApiError::InvalidRequestError(Some(String::from(
                 "query: lookup defined as mode pct but missing values, check usage.",
             ))));
         }
@@ -245,7 +245,7 @@ where
         let req_aggr = lookup_parts[0];
         // Assert that req_type is correct (avg, sum, min, max, count)
         if !["avg", "sum", "min", "max", "count"].contains(&req_aggr) {
-            return Err(ApiError::ServerError(Some(String::from(
+            return Err(ApiError::InvalidRequestError(Some(String::from(
                 "query: aggr is invalid. Valid are: avg, sum, min, max, count.",
             ))));
         }
@@ -254,7 +254,7 @@ where
         let req_time = lookup_parts[2];
         // Assert that req_time is correctly formatted (Regex?)
         if !INTERVAL_RGX.is_match(req_time) {
-            return Err(ApiError::ServerError(Some(String::from(
+            return Err(ApiError::InvalidRequestError(Some(String::from(
                 "query: req_time is not correctly formatted (doesn't pass regex).",
             ))));
         }
@@ -310,7 +310,7 @@ where
         let tmp_query = query.to_uppercase();
         for statement in DISALLOWED_STATEMENT {
             if tmp_query.contains(statement) {
-                return Err(ApiError::ServerError(Some(format!(
+                return Err(ApiError::InvalidRequestError(Some(format!(
                     "Alert {} for host_uuid {:.6} contains disallowed statement \"{}\"",
                     self.g_name(),
                     self.g_host_uuid(),
