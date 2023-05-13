@@ -5,13 +5,12 @@ use uuid::Uuid;
 
 use crate::models::schema::alerts;
 
-#[derive(Identifiable, Insertable, Queryable, Debug, Serialize, Deserialize, Clone, TS)]
+#[derive(Identifiable, Queryable, Debug, Serialize, Deserialize, Clone, TS)]
 #[diesel(table_name = alerts)]
 #[ts(export)]
 pub struct Alerts {
     pub id: i64,
     pub active: bool,
-    // The name can't be updated as it's used for the id
     #[diesel(column_name = _name)]
     pub name: String,
     #[diesel(column_name = _table)]
@@ -43,9 +42,8 @@ pub struct Alerts {
 #[derive(AsChangeset, Deserialize, Serialize, Debug, Default, TS)]
 #[diesel(table_name = alerts)]
 #[ts(export)]
-pub struct AlertsDTO {
+pub struct AlertsDTOUpdate {
     pub active: Option<bool>,
-    // The name can't be updated as it's used for the id
     #[diesel(column_name = _name)]
     pub name: Option<String>,
     #[diesel(column_name = _table)]
@@ -68,4 +66,27 @@ pub struct HttpAlertsCount {
     pub inactive: i64,
     #[diesel(sql_type = BigInt)]
     pub total: i64,
+}
+
+// ================
+// Insertable model
+// ================
+#[derive(Insertable, Deserialize, Serialize, Debug, Default, TS)]
+#[diesel(table_name = alerts)]
+#[ts(export)]
+pub struct AlertsDTO {
+    pub active: Option<bool>,
+    #[diesel(column_name = _name)]
+    pub name: String,
+    #[diesel(column_name = _table)]
+    pub table: String,
+    pub lookup: String,
+    pub timing: i32,
+    pub warn: String,
+    pub crit: String,
+    pub info: String,
+    pub host_uuid: String,
+    pub cid: Uuid,
+    pub hostname: String,
+    pub where_clause: String,
 }

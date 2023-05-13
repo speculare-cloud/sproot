@@ -3,7 +3,7 @@ use diesel::sql_types::{BigInt, Text};
 use diesel::*;
 use uuid::Uuid;
 
-use super::{Alerts, AlertsDTO, HttpAlertsCount, QueryType};
+use super::{Alerts, AlertsDTO, AlertsDTOUpdate, HttpAlertsCount, QueryType};
 use crate::apierrors::ApiError;
 use crate::models::balerts::INTERVAL_RGX;
 use crate::models::schema::alerts::dsl::{_name, alerts as dsl_alerts, host_uuid};
@@ -103,9 +103,9 @@ impl<'a> ExtCrud<'a> for Alerts {
 impl<'a> DtoBase<'a> for Alerts {
     type GetReturn = Vec<Alerts>;
 
-    type InsertType = &'a [Alerts];
+    type InsertType = &'a [AlertsDTO];
 
-    type UpdateType = &'a AlertsDTO;
+    type UpdateType = &'a AlertsDTOUpdate;
 
     type TargetType = i64;
 
