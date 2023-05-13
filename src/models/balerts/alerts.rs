@@ -84,9 +84,9 @@ pub struct AlertsDTO {
     pub timing: i32,
     pub warn: String,
     pub crit: String,
-    pub info: String,
+    pub info: Option<String>,
     pub host_uuid: String,
     pub cid: Uuid,
     pub hostname: String,
-    pub where_clause: String,
+    pub where_clause: Option<String>,
 }

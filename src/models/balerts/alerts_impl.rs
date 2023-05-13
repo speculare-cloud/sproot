@@ -15,6 +15,68 @@ pub trait AlertsQuery {
     fn construct_query(&self) -> Result<(String, QueryType), ApiError>;
 }
 
+trait AlertsDTOTrait {
+    fn g_lookup(&self) -> &String;
+    fn g_where_clause(&self) -> &Option<String>;
+    fn g_table(&self) -> &String;
+    fn g_name(&self) -> &String;
+    fn g_host_uuid(&self) -> &String;
+}
+
+impl AlertsDTOTrait for Alerts {
+    #[inline]
+    fn g_lookup(&self) -> &String {
+        &self.lookup
+    }
+
+    #[inline]
+    fn g_where_clause(&self) -> &Option<String> {
+        &self.where_clause
+    }
+
+    #[inline]
+    fn g_table(&self) -> &String {
+        &self.table
+    }
+
+    #[inline]
+    fn g_name(&self) -> &String {
+        &self.name
+    }
+
+    #[inline]
+    fn g_host_uuid(&self) -> &String {
+        &self.host_uuid
+    }
+}
+
+impl AlertsDTOTrait for AlertsDTO {
+    #[inline]
+    fn g_lookup(&self) -> &String {
+        &self.lookup
+    }
+
+    #[inline]
+    fn g_where_clause(&self) -> &Option<String> {
+        &self.where_clause
+    }
+
+    #[inline]
+    fn g_table(&self) -> &String {
+        &self.table
+    }
+
+    #[inline]
+    fn g_name(&self) -> &String {
+        &self.name
+    }
+
+    #[inline]
+    fn g_host_uuid(&self) -> &String {
+        &self.host_uuid
+    }
+}
+
 impl Alerts {
     /// Get all the Alerts (no filter, nothing, just get all)
     /// - conn: the Database connection
@@ -147,11 +209,13 @@ impl<'a> DtoBase<'a> for Alerts {
     }
 }
 
-impl AlertsQuery for Alerts {
-    /// Create the query for the Alert and get the QueryType
+impl<T> AlertsQuery for T
+where
+    T: AlertsDTOTrait,
+{
     fn construct_query(&self) -> Result<(String, QueryType), ApiError> {
         // Split the lookup String from the alert for analysis
-        let lookup_parts: Vec<&str> = self.lookup.split(' ').collect();
+        let lookup_parts: Vec<&str> = self.g_lookup().split(' ').collect();
 
         // Assert that we have enough parameters
         if lookup_parts.len() < 5 {
@@ -231,13 +295,13 @@ impl AlertsQuery for Alerts {
         // Optional where clause
         // Allow us to add a WHERE condition to the query if needed
         let mut pg_where = String::new();
-        if let Some(where_clause) = self.where_clause.as_ref() {
+        if let Some(where_clause) = &self.g_where_clause() {
             pg_where.push_str(" AND ");
             pg_where.push_str(where_clause);
         }
 
         // Base of the query, we plug every pieces together here
-        let query = format!("SELECT time_bucket('{0}', created_at) as time, {1} FROM {2} WHERE host_uuid=$1 AND created_at > now() at time zone 'utc' - INTERVAL '{0}' {3} GROUP BY time ORDER BY time DESC", req_time, pg_select, self.table, pg_where);
+        let query = format!("SELECT time_bucket('{0}', created_at) as time, {1} FROM {2} WHERE host_uuid=$1 AND created_at > now() at time zone 'utc' - INTERVAL '{0}' {3} GROUP BY time ORDER BY time DESC", req_time, pg_select, self.g_table(), pg_where);
 
         trace!("Query[{:?}] is {}", req_mode, &query);
 
@@ -248,7 +312,9 @@ impl AlertsQuery for Alerts {
             if tmp_query.contains(statement) {
                 return Err(ApiError::ServerError(Some(format!(
                     "Alert {} for host_uuid {:.6} contains disallowed statement \"{}\"",
-                    self.name, self.host_uuid, statement
+                    self.g_name(),
+                    self.g_host_uuid(),
+                    statement
                 ))));
             }
         }
