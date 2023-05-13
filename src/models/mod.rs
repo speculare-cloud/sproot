@@ -82,8 +82,13 @@ pub trait BaseCrud<'a> {
 
 pub trait ExtCrud<'a> {
     type UuidType;
+    type RetType;
 
-    fn count(conn: &mut ConnType, uuid: Self::UuidType, size: i64) -> Result<i64, ApiError>;
+    fn count(
+        conn: &mut ConnType,
+        uuid: Self::UuidType,
+        size: i64,
+    ) -> Result<Self::RetType, ApiError>;
 }
 
 pub trait DtoBase<'a> {

@@ -1,8 +1,9 @@
 use diesel::dsl::exists;
+use diesel::sql_types::{BigInt, Text};
 use diesel::*;
 use uuid::Uuid;
 
-use super::{Alerts, AlertsDTO};
+use super::{Alerts, AlertsDTO, HttpAlertsCount};
 use crate::apierrors::ApiError;
 use crate::models::schema::alerts::dsl::{_name, alerts as dsl_alerts, host_uuid};
 use crate::models::schema::alerts::{cid, id};
@@ -70,13 +71,27 @@ impl<'a> BaseCrud<'a> for Alerts {
 
 impl<'a> ExtCrud<'a> for Alerts {
     type UuidType = &'a str;
+    type RetType = HttpAlertsCount;
 
-    fn count(conn: &mut ConnType, uuid: Self::UuidType, size: i64) -> Result<i64, ApiError> {
-        Ok(dsl_alerts
-            .filter(host_uuid.eq(uuid))
-            .limit(size)
-            .count()
-            .get_result(conn)?)
+    fn count(
+        conn: &mut ConnType,
+        uuid: Self::UuidType,
+        size: i64,
+    ) -> Result<Self::RetType, ApiError> {
+        Ok(sql_query(
+            "
+			SELECT
+				COUNT(*) FILTER (WHERE active = true) as active,
+				COUNT(*) FILTER (WHERE active = false) as inactive,
+				COUNT(*) as total
+			FROM alerts
+			WHERE host_uuid=$1
+			LIMIT $2
+		",
+        )
+        .bind::<Text, _>(uuid)
+        .bind::<BigInt, _>(size)
+        .get_result(conn)?)
     }
 }
 

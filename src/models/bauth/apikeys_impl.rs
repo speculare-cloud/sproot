@@ -140,8 +140,13 @@ impl<'a> BaseCrud<'a> for ApiKey {
 
 impl<'a> ExtCrud<'a> for ApiKey {
     type UuidType = &'a Uuid;
+    type RetType = i64;
 
-    fn count(conn: &mut ConnType, uuid: Self::UuidType, _size: i64) -> Result<i64, ApiError> {
+    fn count(
+        conn: &mut ConnType,
+        uuid: Self::UuidType,
+        _size: i64,
+    ) -> Result<Self::RetType, ApiError> {
         Ok(dsl_apikeys
             .filter(customer_id.eq(uuid))
             .count()

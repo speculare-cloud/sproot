@@ -1,4 +1,4 @@
-use diesel::*;
+use diesel::{sql_types::BigInt, *};
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 use uuid::Uuid;
@@ -56,4 +56,16 @@ pub struct AlertsDTO {
     pub crit: Option<String>,
     pub info: Option<String>,
     pub where_clause: Option<String>,
+}
+
+#[derive(Queryable, QueryableByName, Deserialize, Serialize, Debug, Default, TS)]
+#[diesel(table_name = alerts)]
+#[ts(export)]
+pub struct HttpAlertsCount {
+    #[diesel(sql_type = BigInt)]
+    pub active: i64,
+    #[diesel(sql_type = BigInt)]
+    pub inactive: i64,
+    #[diesel(sql_type = BigInt)]
+    pub total: i64,
 }

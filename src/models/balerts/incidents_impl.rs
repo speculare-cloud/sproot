@@ -112,8 +112,13 @@ impl<'a> BaseCrud<'a> for Incidents {
 
 impl<'a> ExtCrud<'a> for Incidents {
     type UuidType = &'a str;
+    type RetType = i64;
 
-    fn count(conn: &mut ConnType, uuid: Self::UuidType, size: i64) -> Result<i64, ApiError> {
+    fn count(
+        conn: &mut ConnType,
+        uuid: Self::UuidType,
+        size: i64,
+    ) -> Result<Self::RetType, ApiError> {
         Ok(dsl_incidents
             .filter(host_uuid.eq(uuid))
             .limit(size)
