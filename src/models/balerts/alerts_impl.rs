@@ -147,13 +147,18 @@ impl<'a> ExtCrud<'a> for Alerts {
     ) -> Result<Self::RetType, ApiError> {
         Ok(sql_query(
             "
+           	WITH s AS (
+				SELECT
+					active
+				FROM alerts
+				WHERE host_uuid=$1
+				LIMIT $2
+			)
 			SELECT
 				COUNT(*) FILTER (WHERE active = true) as active,
 				COUNT(*) FILTER (WHERE active = false) as inactive,
 				COUNT(*) as total
-			FROM alerts
-			WHERE host_uuid=$1
-			LIMIT $2
+			FROM s;
 			",
         )
         .bind::<Text, _>(uuid)
