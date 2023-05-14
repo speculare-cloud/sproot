@@ -71,7 +71,7 @@ pub struct HttpAlertsCount {
 // ================
 // Insertable model
 // ================
-#[derive(Insertable, Deserialize, Serialize, Debug, Default, TS)]
+#[derive(Hash, Insertable, Deserialize, Serialize, Debug, Default, TS)]
 #[diesel(table_name = alerts)]
 #[ts(export)]
 pub struct AlertsDTO {
