@@ -1,7 +1,10 @@
+use diesel::sql_types::{BigInt, Text};
 use diesel::*;
 use uuid::Uuid;
 
-use super::{Alerts, Incidents, IncidentsDTO, IncidentsDTOUpdate, IncidentsJoined};
+use super::{
+    Alerts, HttpIncidentsCount, Incidents, IncidentsDTO, IncidentsDTOUpdate, IncidentsJoined,
+};
 use crate::apierrors::ApiError;
 use crate::models::schema::{
     alerts::{self, dsl::id as alid},
@@ -112,18 +115,30 @@ impl<'a> BaseCrud<'a> for Incidents {
 
 impl<'a> ExtCrud<'a> for Incidents {
     type UuidType = &'a str;
-    type RetType = i64;
+    type RetType = HttpIncidentsCount;
 
     fn count(
         conn: &mut ConnType,
         uuid: Self::UuidType,
         size: i64,
     ) -> Result<Self::RetType, ApiError> {
-        Ok(dsl_incidents
-            .filter(host_uuid.eq(uuid))
-            .limit(size)
-            .count()
-            .get_result(conn)?)
+        Ok(sql_query(
+            "
+           	WITH s AS (
+				SELECT
+					id
+				FROM incidents
+				WHERE host_uuid=$1
+				LIMIT $2
+			)
+			SELECT
+				COUNT(*) as total
+			FROM s;
+			",
+        )
+        .bind::<Text, _>(uuid)
+        .bind::<BigInt, _>(size)
+        .get_result(conn)?)
     }
 }
 

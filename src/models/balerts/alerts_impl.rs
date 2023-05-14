@@ -154,7 +154,7 @@ impl<'a> ExtCrud<'a> for Alerts {
 			FROM alerts
 			WHERE host_uuid=$1
 			LIMIT $2
-		",
+			",
         )
         .bind::<Text, _>(uuid)
         .bind::<BigInt, _>(size)

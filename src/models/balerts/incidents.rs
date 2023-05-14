@@ -1,4 +1,4 @@
-use diesel::*;
+use diesel::{sql_types::BigInt, *};
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 use uuid::Uuid;
@@ -69,4 +69,12 @@ impl From<(Incidents, Alerts)> for IncidentsJoined {
             alert: v.1,
         }
     }
+}
+
+#[derive(Queryable, QueryableByName, Deserialize, Serialize, Debug, Default, TS)]
+#[diesel(table_name = incidents)]
+#[ts(export)]
+pub struct HttpIncidentsCount {
+    #[diesel(sql_type = BigInt)]
+    pub total: i64,
 }
