@@ -72,6 +72,26 @@ impl Incidents {
             .map(|x| x.into_iter().map(IncidentsJoined::from))?
             .collect::<Vec<_>>())
     }
+
+    /// Same as get_own_joined but with specific host targeted
+    pub fn get_own_specific(
+        conn: &mut ConnType,
+        uuid: &Uuid,
+        huuid: &str,
+        size: i64,
+        page: i64,
+    ) -> Result<Vec<IncidentsJoined>, ApiError> {
+        Ok(incidents::table
+            .filter(cid.eq(uuid))
+            .filter(host_uuid.eq(huuid))
+            .limit(size)
+            .offset(page * size)
+            .order_by(updated_at.desc())
+            .inner_join(alerts::table.on(alerts_id.eq(alid)))
+            .load::<(Self, Alerts)>(conn)
+            .map(|x| x.into_iter().map(IncidentsJoined::from))?
+            .collect::<Vec<_>>())
+    }
 }
 
 impl<'a> BaseCrud<'a> for Incidents {
