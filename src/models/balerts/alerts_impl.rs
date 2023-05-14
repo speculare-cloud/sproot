@@ -322,3 +322,19 @@ where
         Ok((query, req_mode))
     }
 }
+
+impl From<AlertsDTO> for AlertsDTOUpdate {
+    fn from(alert: AlertsDTO) -> Self {
+        AlertsDTOUpdate {
+            active: alert.active,
+            name: Some(alert.name),
+            table: Some(alert.table),
+            lookup: Some(alert.lookup),
+            timing: Some(alert.timing),
+            warn: Some(alert.warn),
+            crit: Some(alert.crit),
+            info: alert.info,
+            where_clause: alert.where_clause,
+        }
+    }
+}
