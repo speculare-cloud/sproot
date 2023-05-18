@@ -1,0 +1,31 @@
+{
+  "name": "@martichou/sproot",
+  "version": "1.0.0",
+  "description": "Sproot is a library which share the common part for Alerts and Server. It help us avoid writting duplicated code and models for each members (projects) of the workspace.",
+  "main": "dist/index.js",
+  "module": "esm/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "bindings",
+    "esm"
+  ],
+  "scripts": {
+    "build:cjs": "tsc --module commonjs --outDir dist",
+    "build:esm": "tsc --target es2018 --outDir esm",
+    "build": "npm run build:esm && npm run build:cjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/speculare-cloud/sproot.git"
+  },
+  "author": "Martin ANDRE",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/speculare-cloud/sproot/issues"
+  },
+  "homepage": "https://github.com/speculare-cloud/sproot#readme",
+  "devDependencies": {
+    "typescript": "^5.0.4"
+  }
+}
