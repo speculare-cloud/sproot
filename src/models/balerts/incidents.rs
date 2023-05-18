@@ -55,7 +55,8 @@ pub struct IncidentsDTOUpdate {
     pub severity: Option<i32>,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, TS)]
+#[ts(export)]
 pub struct IncidentsJoined {
     #[serde(flatten)]
     pub incident: Incidents,

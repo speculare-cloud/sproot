@@ -1,5 +1,6 @@
 export * from "./AlertsDTOUpdate";
 export * from "./IoBlock";
+export * from "./IncidentsJoined";
 export * from "./ApiKey";
 export * from "./HttpAlertsCount";
 export * from "./Alerts";

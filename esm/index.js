@@ -16,6 +16,7 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
 Object.defineProperty(exports, "__esModule", { value: true });
 __exportStar(require("./AlertsDTOUpdate"), exports);
 __exportStar(require("./IoBlock"), exports);
+__exportStar(require("./IncidentsJoined"), exports);
 __exportStar(require("./ApiKey"), exports);
 __exportStar(require("./HttpAlertsCount"), exports);
 __exportStar(require("./Alerts"), exports);
