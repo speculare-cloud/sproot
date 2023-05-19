@@ -77,6 +77,6 @@ impl From<(Incidents, Alerts)> for IncidentsJoined {
 #[ts(export)]
 pub struct HttpIncidentsCount {
     #[diesel(sql_type = BigInt)]
-	#[ts(type = "number")]
+    #[ts(type = "number")]
     pub total: i64,
 }

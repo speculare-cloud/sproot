@@ -9,7 +9,7 @@ use crate::models::schema::alerts;
 #[diesel(table_name = alerts)]
 #[ts(export)]
 pub struct Alerts {
-	#[ts(type = "number")]
+    #[ts(type = "number")]
     pub id: i64,
     pub active: bool,
     #[diesel(column_name = _name)]
@@ -62,13 +62,13 @@ pub struct AlertsDTOUpdate {
 #[ts(export)]
 pub struct HttpAlertsCount {
     #[diesel(sql_type = BigInt)]
-	#[ts(type = "number")]
+    #[ts(type = "number")]
     pub active: i64,
     #[diesel(sql_type = BigInt)]
-	#[ts(type = "number")]
+    #[ts(type = "number")]
     pub inactive: i64,
     #[diesel(sql_type = BigInt)]
-	#[ts(type = "number")]
+    #[ts(type = "number")]
     pub total: i64,
 }
 
