@@ -9,6 +9,7 @@ use crate::models::schema::alerts;
 #[diesel(table_name = alerts)]
 #[ts(export)]
 pub struct Alerts {
+	#[ts(type = "number")]
     pub id: i64,
     pub active: bool,
     #[diesel(column_name = _name)]
