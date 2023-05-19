@@ -1,5 +1,5 @@
 export interface HttpAlertsCount {
-    active: bigint;
-    inactive: bigint;
-    total: bigint;
+    active: number;
+    inactive: number;
+    total: number;
 }

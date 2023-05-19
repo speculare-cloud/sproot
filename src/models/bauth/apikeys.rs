@@ -9,6 +9,7 @@ use crate::models::schema::apikeys;
 #[diesel(table_name = apikeys)]
 #[ts(export)]
 pub struct ApiKey {
+	#[ts(type = "number")]
     pub id: i64,
     pub key: String,
     pub host_uuid: Option<String>,

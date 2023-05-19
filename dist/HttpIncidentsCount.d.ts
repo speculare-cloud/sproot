@@ -1,3 +1,3 @@
 export interface HttpIncidentsCount {
-    total: bigint;
+    total: number;
 }
