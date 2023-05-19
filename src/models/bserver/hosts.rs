@@ -18,6 +18,7 @@ pub struct Host {
     pub system: String,
     pub os_version: String,
     pub hostname: String,
+	#[ts(type = "number")]
     pub uptime: i64,
     pub uuid: String,
     pub created_at: chrono::NaiveDateTime,
