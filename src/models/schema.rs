@@ -50,6 +50,7 @@ table! {
         os_version -> Varchar,
         hostname -> Varchar,
         uptime -> Int8,
+        sync_interval -> Int8,
         uuid -> Varchar,
         created_at -> Timestamp,
         updated_at -> Timestamp,

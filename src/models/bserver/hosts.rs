@@ -20,6 +20,8 @@ pub struct Host {
     pub hostname: String,
     #[ts(type = "number")]
     pub uptime: i64,
+    #[ts(type = "number")]
+    pub sync_interval: i64,
     pub uuid: String,
     pub created_at: chrono::NaiveDateTime,
     pub updated_at: chrono::NaiveDateTime,
@@ -35,6 +37,7 @@ pub struct HostDTO<'a> {
     pub os_version: &'a str,
     pub hostname: &'a str,
     pub uptime: i64,
+    pub sync_interval: i64,
     pub uuid: &'a str,
     pub created_at: chrono::NaiveDateTime,
 }
@@ -48,6 +51,7 @@ pub struct HttpHost {
     pub os_version: String,
     pub hostname: String,
     pub uptime: i64,
+    pub sync_interval: i64,
     pub cpu_stats: Option<CpuStats>,
     pub cpu_times: Option<CpuTimes>,
     pub load_avg: Option<LoadAvg>,

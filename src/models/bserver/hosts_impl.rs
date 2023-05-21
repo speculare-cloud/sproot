@@ -182,6 +182,7 @@ impl<'a> HostDTO<'a> {
             os_version: &item.os_version,
             hostname: &item.hostname,
             uptime: item.uptime,
+            sync_interval: item.sync_interval,
             uuid: huuid,
             created_at: item.created_at,
         }
