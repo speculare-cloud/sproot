@@ -1,12 +1,10 @@
-use diesel::dsl::count_distinct;
 use diesel::{
     sql_types::{Text, Timestamp},
     *,
 };
 
-use super::{BaseMetrics, CFrom, ExtMetrics, IoBlock, IoBlockDTO, IoBlockDTORaw};
+use super::{BaseMetrics, CFrom, IoBlock, IoBlockDTO, IoBlockDTORaw};
 use crate::apierrors::ApiError;
-use crate::models::schema::ioblocks::device_name;
 use crate::models::schema::ioblocks::dsl::{created_at, host_uuid, ioblocks as dsl_ioblocks};
 use crate::models::{get_aggregated_views, get_granularity, HttpHost};
 use crate::ConnType;
@@ -89,24 +87,6 @@ impl BaseMetrics for IoBlock {
         .bind::<Timestamp, _>(min_date)
         .bind::<Timestamp, _>(max_date)
         .load(conn)?)
-    }
-}
-
-impl ExtMetrics for IoBlock {
-    fn count_unique(
-        conn: &mut ConnType,
-        uuid: &str,
-        min_date: chrono::NaiveDateTime,
-        max_date: chrono::NaiveDateTime,
-    ) -> Result<i64, ApiError> {
-        Ok(dsl_ioblocks
-            .select(count_distinct(device_name))
-            .filter(
-                host_uuid
-                    .eq(uuid)
-                    .and(created_at.between(min_date, max_date)),
-            )
-            .first(conn)?)
     }
 }
 

@@ -1,12 +1,11 @@
-use diesel::dsl::count_distinct;
 use diesel::{
     sql_types::{Text, Timestamp},
     *,
 };
 
-use super::{BaseMetrics, CFrom, Disk, DiskDTO, DiskDTORaw, ExtMetrics};
+use super::{BaseMetrics, CFrom, Disk, DiskDTO, DiskDTORaw};
 use crate::apierrors::ApiError;
-use crate::models::schema::disks::dsl::{created_at, disk_name, disks as dsl_disks, host_uuid};
+use crate::models::schema::disks::dsl::{created_at, disks as dsl_disks, host_uuid};
 use crate::models::{get_aggregated_views, get_granularity, HttpHost};
 use crate::ConnType;
 
@@ -88,24 +87,6 @@ impl BaseMetrics for Disk {
         .bind::<Timestamp, _>(min_date)
         .bind::<Timestamp, _>(max_date)
         .load(conn)?)
-    }
-}
-
-impl ExtMetrics for Disk {
-    fn count_unique(
-        conn: &mut ConnType,
-        uuid: &str,
-        min_date: chrono::NaiveDateTime,
-        max_date: chrono::NaiveDateTime,
-    ) -> Result<i64, ApiError> {
-        Ok(dsl_disks
-            .select(count_distinct(disk_name))
-            .filter(
-                host_uuid
-                    .eq(uuid)
-                    .and(created_at.between(min_date, max_date)),
-            )
-            .first(conn)?)
     }
 }
 

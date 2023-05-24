@@ -63,15 +63,6 @@ pub trait BaseMetrics {
     ) -> Result<Self::VecRawReturn, ApiError>;
 }
 
-pub trait ExtMetrics {
-    fn count_unique(
-        conn: &mut ConnType,
-        uuid: &str,
-        min_date: chrono::NaiveDateTime,
-        max_date: chrono::NaiveDateTime,
-    ) -> Result<i64, ApiError>;
-}
-
 pub trait CFrom<T>: Sized {
     type RET;
     type UUID;

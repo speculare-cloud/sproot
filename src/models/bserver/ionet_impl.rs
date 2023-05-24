@@ -1,17 +1,16 @@
 use diesel::{
-    dsl::count_distinct,
     sql_types::{Text, Timestamp},
     *,
 };
 
-use super::{BaseMetrics, CFrom, ExtMetrics, IoNet, IoNetDTO, IoNetDTORaw};
+use super::{BaseMetrics, CFrom, IoNet, IoNetDTO, IoNetDTORaw};
+use crate::apierrors::ApiError;
 use crate::models::{
     get_aggregated_views,
     schema::ionets::dsl::{created_at, host_uuid, ionets as dsl_ionets},
 };
 use crate::models::{get_granularity, HttpHost};
 use crate::ConnType;
-use crate::{apierrors::ApiError, models::schema::ionets::interface};
 
 impl BaseMetrics for IoNet {
     type VecReturn = Vec<IoNet>;
@@ -91,24 +90,6 @@ impl BaseMetrics for IoNet {
         .bind::<Timestamp, _>(min_date)
         .bind::<Timestamp, _>(max_date)
         .load(conn)?)
-    }
-}
-
-impl ExtMetrics for IoNet {
-    fn count_unique(
-        conn: &mut ConnType,
-        uuid: &str,
-        min_date: chrono::NaiveDateTime,
-        max_date: chrono::NaiveDateTime,
-    ) -> Result<i64, ApiError> {
-        Ok(dsl_ionets
-            .select(count_distinct(interface))
-            .filter(
-                host_uuid
-                    .eq(uuid)
-                    .and(created_at.between(min_date, max_date)),
-            )
-            .first(conn)?)
     }
 }
 
