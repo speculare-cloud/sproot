@@ -5,7 +5,7 @@ use uuid::Uuid;
 use super::{ApiKey, ApiKeyDTO};
 use crate::apierrors::ApiError;
 use crate::models::schema::apikeys::dsl::{
-    apikeys as dsl_apikeys, berta, customer_id, host_uuid, key,
+    apikeys as dsl_apikeys, berta, customer_id, host_uuid, id, key,
 };
 use crate::models::{BaseCrud, DtoBase, ExtCrud};
 use crate::ConnType;
@@ -22,6 +22,16 @@ impl ApiKey {
     ) -> Result<Self, ApiError> {
         Ok(dsl_apikeys
             .filter(customer_id.eq(cid).and(key.eq(hkey)))
+            .first(conn)?)
+    }
+
+    pub fn get_by_keyid_and_owner(
+        conn: &mut ConnType,
+        cid: &Uuid,
+        kid: i64,
+    ) -> Result<Self, ApiError> {
+        Ok(dsl_apikeys
+            .filter(customer_id.eq(cid).and(id.eq(kid)))
             .first(conn)?)
     }
 
