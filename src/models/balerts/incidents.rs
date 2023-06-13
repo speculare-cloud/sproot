@@ -60,11 +60,11 @@ pub struct IncidentsDTOUpdate {
 pub struct IncidentsJoined {
     #[serde(flatten)]
     pub incident: Incidents,
-    pub alert: Alerts,
+    pub alert: Option<Alerts>,
 }
 
-impl From<(Incidents, Alerts)> for IncidentsJoined {
-    fn from(v: (Incidents, Alerts)) -> Self {
+impl From<(Incidents, Option<Alerts>)> for IncidentsJoined {
+    fn from(v: (Incidents, Option<Alerts>)) -> Self {
         Self {
             incident: v.0,
             alert: v.1,

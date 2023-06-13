@@ -11,5 +11,5 @@ export interface IncidentsJoined {
     severity: number;
     alerts_id: bigint;
     cid: string;
-    alert: Alerts;
+    alert: Alerts | null;
 }

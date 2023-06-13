@@ -67,8 +67,8 @@ impl Incidents {
             .limit(size)
             .offset(page * size)
             .order_by(updated_at.desc())
-            .inner_join(alerts::table.on(alerts_id.eq(alid)))
-            .load::<(Self, Alerts)>(conn)
+            .left_join(alerts::table.on(alerts_id.eq(alid)))
+            .load::<(Self, Option<Alerts>)>(conn)
             .map(|x| x.into_iter().map(IncidentsJoined::from))?
             .collect::<Vec<_>>())
     }
@@ -87,8 +87,8 @@ impl Incidents {
             .limit(size)
             .offset(page * size)
             .order_by(updated_at.desc())
-            .inner_join(alerts::table.on(alerts_id.eq(alid)))
-            .load::<(Self, Alerts)>(conn)
+            .left_join(alerts::table.on(alerts_id.eq(alid)))
+            .load::<(Self, Option<Alerts>)>(conn)
             .map(|x| x.into_iter().map(IncidentsJoined::from))?
             .collect::<Vec<_>>())
     }
