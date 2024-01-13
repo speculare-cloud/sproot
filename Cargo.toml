@@ -25,7 +25,7 @@ simd-json = "0.9"
 serde = { version = "1.0", features = ["derive"] }
 snmalloc-rs = "0.3"
 thiserror = "1.0"
-ts-rs = { git = "https://github.com/Martichou/ts-rs", features = ["serde-compat", "uuid-impl", "chrono-impl"] }
+ts-rs = { version = "7.1", features = ["serde-compat", "uuid-impl", "chrono-impl"] }
 uuid = { version = "1.1", features = ["serde", "v4"] }
 walkdir = "2.3"
 
