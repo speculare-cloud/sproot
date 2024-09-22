@@ -8,7 +8,7 @@ edition = "2021"
 [dependencies]
 sys_metrics = { git = "https://github.com/Martichou/sys_metrics" }
 askama = "0.12"
-actix-web = { version = "4.3", features = ["rustls"] }
+actix-web = { version = "4.3", features = ["rustls-0_23"] }
 actix-session = { version = "0.10", features = ["cookie-session"] }
 axum = { version = "0.7" }
 chrono = { version = "0.4", features = ["serde"] }
