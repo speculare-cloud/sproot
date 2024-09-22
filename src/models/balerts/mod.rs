@@ -1,3 +1,6 @@
+use once_cell::sync::Lazy;
+use regex::Regex;
+
 mod alerts;
 mod alerts_impl;
 mod alerts_querying;
@@ -8,9 +11,6 @@ pub use alerts_querying::*;
 mod incidents;
 mod incidents_impl;
 pub use incidents::*;
-pub use incidents_impl::*;
-use once_cell::sync::Lazy;
-use regex::Regex;
 
 pub mod qtype;
 

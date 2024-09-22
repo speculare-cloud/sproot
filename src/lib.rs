@@ -17,7 +17,10 @@ use actix_session::config::{CookieContentSecurity, PersistentSession};
 use actix_session::storage::CookieSessionStore;
 use actix_session::SessionMiddleware;
 use diesel::{prelude::PgConnection, r2d2::ConnectionManager};
-use rustls::{Certificate, PrivateKey, ServerConfig};
+use rustls::{
+    pki_types::{CertificateDer, PrivateKeyDer},
+    ServerConfig,
+};
 
 use crate::apierrors::ApiError;
 
@@ -81,29 +84,37 @@ pub fn prog() -> Option<String> {
 ///
 /// Use key and cert for the path to find the files.
 pub fn get_ssl_builder(key: &str, cert: &str) -> Result<ServerConfig, ApiError> {
-    let key_file = &mut BufReader::new(File::open(key)?);
-    // Extract all PKCS8-encoded private key from key_file and generate a Vec from them
-    let mut keys = rustls_pemfile::pkcs8_private_keys(key_file)?;
-    // If no keys are found, we try using the rsa type
-    if keys.is_empty() {
-        // Reopen a new BufReader as pkcs8_private_keys took over the previous one
-        let key_file = &mut BufReader::new(File::open(key)?);
-        keys = rustls_pemfile::rsa_private_keys(key_file)?;
-    }
-    // Convert the first key to be a PrivateKey
-    let key: PrivateKey = PrivateKey(keys.remove(0));
+    let mut reader = BufReader::new(File::open(key)?);
+
+    // Try to read PKCS8 private keys first
+    let keys = rustls_pemfile::pkcs8_private_keys(&mut reader)
+        .map(|v| v.unwrap().clone_key())
+        .collect::<Vec<_>>();
+
+    let key = if !keys.is_empty() {
+        PrivateKeyDer::Pkcs8(keys[0].clone_key())
+    } else {
+        // If no PKCS8 keys are found, try to read RSA private keys
+        let mut reader = BufReader::new(File::open(key)?);
+        let keys = rustls_pemfile::rsa_private_keys(&mut reader)
+            .map(|v| v.unwrap().clone_key())
+            .collect::<Vec<_>>();
+
+        if !keys.is_empty() {
+            PrivateKeyDer::Pkcs1(keys[0].clone_key())
+        } else {
+            return Err(ApiError::ExplicitError("No private keys found".to_owned()));
+        }
+    };
 
     let cert_file = &mut BufReader::new(File::open(cert)?);
     // Create a Vec of certificate by extracting all cert from cert_file
     let cert_chain = rustls_pemfile::certs(cert_file)
-        .unwrap()
-        .iter()
-        .map(|v| Certificate(v.clone()))
+        .map(|v| CertificateDer::from_slice(&v.unwrap().clone()).into_owned())
         .collect();
 
     // Return the ServerConfig to be used
     Ok(ServerConfig::builder()
-        .with_safe_defaults()
         .with_no_client_auth()
         .with_single_cert(cert_chain, key)?)
 }

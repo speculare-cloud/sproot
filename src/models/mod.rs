@@ -45,10 +45,7 @@ pub struct InnerUser {
 /// which means for size = 21600 that we'll get the avg of each 60s intervals
 #[inline]
 pub fn get_granularity(size: i64) -> u32 {
-    std::cmp::min(
-        86400,
-        std::cmp::max(1, ((0.003 * size as f32) * (0.93) + 0.298206) as u32),
-    )
+    (((0.003 * size as f32) * (0.93) + 0.298206) as u32).clamp(1, 86400)
 }
 
 #[inline]
