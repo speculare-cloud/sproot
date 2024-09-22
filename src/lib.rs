@@ -141,3 +141,9 @@ pub fn get_session_middleware(
     .cookie_content_security(CookieContentSecurity::Signed)
     .build()
 }
+
+pub fn init_default_crypto() {
+    rustls::crypto::aws_lc_rs::default_provider()
+        .install_default()
+        .unwrap();
+}
